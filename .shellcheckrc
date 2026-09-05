@@ -1,0 +1,7 @@
+# Follow `source` directives so the library functions are actually checked
+# against their callers instead of being reported as unfollowable (SC1091).
+external-sources=true
+
+# Resolve `source=` directives relative to the script being checked, not to the
+# current working directory, so the result is the same from anywhere.
+source-path=SCRIPTDIR
