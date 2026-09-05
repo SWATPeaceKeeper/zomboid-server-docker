@@ -45,7 +45,8 @@ install_phase() {
   fi
   if ! steam_is_installed "${PZ_SERVER_DIR}"; then
     log_info "No installation found in ${PZ_SERVER_DIR}, installing now."
-    log_info "The first start downloads roughly 3 GB and takes several minutes."
+    log_info "The first start downloads roughly 7 GB on Build 42 and then" \
+      "generates the world, which together takes 10-20 minutes."
     steam_install "${PZ_SERVER_DIR}" "${PZ_BRANCH}"
   elif [ "${UPDATE_ON_START}" = "true" ]; then
     steam_install "${PZ_SERVER_DIR}" "${PZ_BRANCH}"

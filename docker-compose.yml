@@ -1,0 +1,79 @@
+---
+services:
+  pz-server:
+    build:
+      context: .
+    image: ghcr.io/swatpeacekeeper/pz-docker-server:latest
+    container_name: pz-server
+    restart: unless-stopped
+    # The entrypoint answers SIGTERM by sending `quit` and waiting for the world
+    # to be written. Docker's 10s default would SIGKILL a large world mid-save.
+    stop_grace_period: 180s
+    environment:
+      PZ_BRANCH: "${PZ_BRANCH:-public}"
+      PZ_MAX_RAM: "${PZ_MAX_RAM:-4g}"
+      UPDATE_ON_START: "${UPDATE_ON_START:-true}"
+      SERVER_NAME: "${SERVER_NAME:-servertest}"
+      PUBLIC_NAME: "${PUBLIC_NAME:-Project Zomboid Server}"
+      PUBLIC: "${PUBLIC:-false}"
+      MAX_PLAYERS: "${MAX_PLAYERS:-16}"
+      GAME_PORT: "${GAME_PORT:-16261}"
+      UDP_PORT: "${UDP_PORT:-16262}"
+      RCON_PORT: "${RCON_PORT:-27015}"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
+      ADMIN_PASSWORD: "${PZ_ADMIN_PASSWORD:?set PZ_ADMIN_PASSWORD in your .env}"
+      RCON_PASSWORD: "${PZ_RCON_PASSWORD:?set PZ_RCON_PASSWORD in your .env}"
+      SERVER_PASSWORD: "${PZ_SERVER_PASSWORD:-}"
+      MOD_IDS: "${MOD_IDS:-}"
+      WORKSHOP_IDS: "${WORKSHOP_IDS:-}"
+      TZ: "${TZ:-Europe/Berlin}"
+    ports:
+      # Only the game ports are published. RCON stays on the internal network:
+      # publishing it would hand out remote server administration.
+      - "${GAME_PORT:-16261}:${GAME_PORT:-16261}/udp"
+      - "${UDP_PORT:-16262}:${UDP_PORT:-16262}/udp"
+    volumes:
+      - pz-server:/data/server
+      - pz-zomboid:/data/zomboid
+    networks:
+      - pz-internal
+    security_opt:
+      - no-new-privileges:true
+
+  pz-backup:
+    build:
+      context: .
+      dockerfile: Dockerfile.backup
+    image: ghcr.io/swatpeacekeeper/pz-docker-server-backup:latest
+    container_name: pz-backup
+    restart: unless-stopped
+    stop_grace_period: 60s
+    depends_on:
+      - pz-server
+    environment:
+      BACKUP_INTERVAL: "${BACKUP_INTERVAL:-6h}"
+      BACKUP_KEEP: "${BACKUP_KEEP:-14}"
+      BACKUP_MODE: "${BACKUP_MODE:-tar}"
+      BACKUP_ON_START: "${BACKUP_ON_START:-true}"
+      RCON_HOST: "pz-server"
+      RCON_PORT: "${RCON_PORT:-27015}"
+      RCON_PASSWORD: "${PZ_RCON_PASSWORD:?set PZ_RCON_PASSWORD in your .env}"
+      NTFY_URL: "${NTFY_URL:-}"
+      NTFY_TOKEN: "${NTFY_TOKEN:-}"
+      TZ: "${TZ:-Europe/Berlin}"
+    volumes:
+      - pz-zomboid:/data/zomboid:ro
+      - pz-backups:/data/backups
+    networks:
+      - pz-internal
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  pz-server:
+  pz-zomboid:
+  pz-backups:
+
+networks:
+  pz-internal:
+    internal: true
