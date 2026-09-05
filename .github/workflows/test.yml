@@ -1,0 +1,54 @@
+---
+name: Test
+
+"on":
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Nightly, to catch a Project Zomboid update breaking the image before a
+    # deployment does.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run bats unit tests
+        run: ./tests/run-unit.sh
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: unit
+    # The server download is roughly 7 GB on Build 42 and the first boot
+    # generates a world before it answers anything.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Free disk space for the Steam download
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost \
+            /usr/local/lib/android "${AGENT_TOOLSDIRECTORY:-/opt/hostedtoolcache}"
+          df -h /
+
+      - name: Run the smoke test
+        env:
+          SMOKE_TIMEOUT: "2400"
+        run: ./tests/smoke.sh
+
+      - name: Show the server log on failure
+        if: failure()
+        run: docker ps --all --filter 'name=pz-smoke' --format '{{.Names}}' | xargs -r -I{} docker logs --tail 200 {}
