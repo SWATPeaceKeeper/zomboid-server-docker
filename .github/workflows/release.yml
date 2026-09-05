@@ -58,12 +58,16 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6.2.0
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          # `latest=auto` moves `latest` only when a semver tag is built, which is
+          # what the README promises it means. Setting it on every push to main
+          # would make it a second name for `edge`.
+          flavor: |
+            latest=auto
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=edge,enable={{is_default_branch}}
+            type=edge,branch=main
             type=sha,format=long,prefix=sha-
           labels: |
             org.opencontainers.image.version={{tag}}
