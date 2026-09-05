@@ -1485,7 +1485,7 @@ FROM steamcmd/steamcmd:ubuntu-24@sha256:2fbec2969d6caf1d203b62a365c0198c17c7eb98
 LABEL org.opencontainers.image.title="Project Zomboid Dedicated Server" \
   org.opencontainers.image.description="Project Zomboid dedicated server, installed from Steam into a volume at runtime" \
   org.opencontainers.image.licenses="GPL-3.0-or-later" \
-  org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/pz-docker-server"
+  org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/zomboid-server-docker"
 
 # hadolint ignore=DL3008
 RUN apt-get update \
@@ -1581,7 +1581,7 @@ services:
   pz-server:
     build:
       context: .
-    image: ghcr.io/swatpeacekeeper/pz-docker-server:latest
+    image: ghcr.io/swatpeacekeeper/zomboid-server-docker:latest
     container_name: pz-server
     restart: unless-stopped
     # The entrypoint answers SIGTERM by sending `quit` and waiting for the world
@@ -2111,7 +2111,7 @@ FROM debian:13-slim
 
 LABEL org.opencontainers.image.title="Project Zomboid backup sidecar" \
   org.opencontainers.image.licenses="GPL-3.0-or-later" \
-  org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/pz-docker-server"
+  org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/zomboid-server-docker"
 
 # hadolint ignore=DL3008
 RUN apt-get update \
@@ -2153,7 +2153,7 @@ Insert into `docker-compose.yml` under `services:`, after `pz-server`:
     build:
       context: .
       dockerfile: Dockerfile.backup
-    image: ghcr.io/swatpeacekeeper/pz-docker-server-backup:latest
+    image: ghcr.io/swatpeacekeeper/zomboid-server-docker-backup:latest
     container_name: pz-backup
     restart: unless-stopped
     stop_grace_period: 60s

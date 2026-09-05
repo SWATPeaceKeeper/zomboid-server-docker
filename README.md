@@ -1,10 +1,9 @@
 # Project Zomboid Dedicated Server
 
-[![Lint](https://github.com/SWATPeaceKeeper/pz-docker-server/actions/workflows/lint.yml/badge.svg)](https://github.com/SWATPeaceKeeper/pz-docker-server/actions/workflows/lint.yml)
-[![Test](https://github.com/SWATPeaceKeeper/pz-docker-server/actions/workflows/test.yml/badge.svg)](https://github.com/SWATPeaceKeeper/pz-docker-server/actions/workflows/test.yml)
-[![Release](https://github.com/SWATPeaceKeeper/pz-docker-server/actions/workflows/release.yml/badge.svg)](https://github.com/SWATPeaceKeeper/pz-docker-server/actions/workflows/release.yml)
+[![Lint](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/lint.yml/badge.svg)](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/lint.yml)
+[![Test](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/test.yml/badge.svg)](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/test.yml)
+[![Release](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/release.yml/badge.svg)](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/release.yml)
 [![Licence: GPL-3.0-or-later](https://img.shields.io/badge/licence-GPL--3.0--or--later-blue.svg)](LICENSE)
-[![DeepScan grade](https://deepscan.io/api/teams/30315/projects/32385/branches/1069500/badge/grade.svg?token=a1fa0980263b30233c0ddf1e9c3ed778290db2ee)](https://deepscan.io/dashboard#view=project&tid=30315&pid=32385&bid=1069500)
 
 A container image and Compose stack for running a [Project Zomboid](https://projectzomboid.com/)
 dedicated server.
@@ -25,8 +24,8 @@ finish, instead of letting Docker kill the JVM mid-write.
 ## Quick start
 
 ```bash
-git clone https://github.com/SWATPeaceKeeper/pz-docker-server.git
-cd pz-docker-server
+git clone https://github.com/SWATPeaceKeeper/zomboid-server-docker.git
+cd zomboid-server-docker
 
 export PZ_ADMIN_PASSWORD='choose-something-long'
 export PZ_RCON_PASSWORD='choose-something-else-long'
@@ -149,8 +148,8 @@ Two images are published to GHCR:
 
 | Image | Contents |
 |---|---|
-| `ghcr.io/swatpeacekeeper/pz-docker-server` | The server |
-| `ghcr.io/swatpeacekeeper/pz-docker-server-backup` | The backup sidecar |
+| `ghcr.io/swatpeacekeeper/zomboid-server-docker` | The server |
+| `ghcr.io/swatpeacekeeper/zomboid-server-docker-backup` | The backup sidecar |
 
 Both are tagged the same way:
 

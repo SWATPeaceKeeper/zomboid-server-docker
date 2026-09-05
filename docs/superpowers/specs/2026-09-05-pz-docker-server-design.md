@@ -2,7 +2,7 @@
 
 - **Date:** 2026-09-05
 - **Status:** Approved
-- **Repository:** `github.com/SWATPeaceKeeper/pz-docker-server`
+- **Repository:** `github.com/SWATPeaceKeeper/zomboid-server-docker`
 - **License:** GPL-3.0-or-later
 
 ## 1. Purpose
@@ -219,7 +219,7 @@ false`, workflows scanned with zizmor.
 |---|---|---|
 | `lint.yml` | push, PR | hadolint, shellcheck, `shfmt -d -i 2`, yamllint, zizmor |
 | `test.yml` | PR, nightly | `bats` unit tests, then image smoke test |
-| `release.yml` | main, tags | Trivy scan, push to `ghcr.io/swatpeacekeeper/pz-docker-server` |
+| `release.yml` | main, tags | Trivy scan, push to `ghcr.io/swatpeacekeeper/zomboid-server-docker` |
 
 Unit tests (`bats`) cover the pure-bash logic as behaviour: INI patching
 preserves comments and unrelated keys, appends missing keys, and handles values

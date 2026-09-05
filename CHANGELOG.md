@@ -44,4 +44,4 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/pz-docker-server/commits/main
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/commits/main

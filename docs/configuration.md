@@ -72,7 +72,7 @@ To change any of those, edit the files in the `pz-zomboid` volume and restart:
 
 ```bash
 docker compose stop pz-server
-docker run --rm -it -v pz-docker-server_pz-zomboid:/data/zomboid \
+docker run --rm -it -v zomboid-server-docker_pz-zomboid:/data/zomboid \
   -w /data/zomboid/Server alpine vi servertest_SandboxVars.lua
 docker compose start pz-server
 ```

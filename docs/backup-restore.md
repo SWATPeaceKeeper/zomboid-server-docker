@@ -56,7 +56,7 @@ Set `BACKUP_MODE=dir`, then point borgmatic at the host path behind the
 
 ```yaml
 source_directories:
-  - /var/lib/docker/volumes/pz-docker-server_pz-backups/_data
+  - /var/lib/docker/volumes/zomboid-server-docker_pz-backups/_data
 
 exclude_patterns:
   - '*.tar.zst'
@@ -94,13 +94,13 @@ is a guess.
 2. Find the archive you want.
 
    ```bash
-   docker run --rm -v pz-docker-server_pz-backups:/b alpine ls -lh /b
+   docker run --rm -v zomboid-server-docker_pz-backups:/b alpine ls -lh /b
    ```
 
 3. Empty the data volume. Everything in it is about to be replaced.
 
    ```bash
-   docker run --rm -v pz-docker-server_pz-zomboid:/data/zomboid alpine \
+   docker run --rm -v zomboid-server-docker_pz-zomboid:/data/zomboid alpine \
      sh -c 'rm -rf /data/zomboid/Saves /data/zomboid/Server'
    ```
 
@@ -108,9 +108,9 @@ is a guess.
 
    ```bash
    docker run --rm \
-     -v pz-docker-server_pz-zomboid:/data/zomboid \
-     -v pz-docker-server_pz-backups:/b \
-     ghcr.io/swatpeacekeeper/pz-docker-server-backup:latest \
+     -v zomboid-server-docker_pz-zomboid:/data/zomboid \
+     -v zomboid-server-docker_pz-backups:/b \
+     ghcr.io/swatpeacekeeper/zomboid-server-docker-backup:latest \
      tar --use-compress-program=zstd -xf /b/pz-20260905-060000.tar.zst -C /data/zomboid
    ```
 
@@ -118,8 +118,8 @@ is a guess.
 
    ```bash
    docker run --rm \
-     -v pz-docker-server_pz-zomboid:/data/zomboid \
-     -v pz-docker-server_pz-backups:/b \
+     -v zomboid-server-docker_pz-zomboid:/data/zomboid \
+     -v zomboid-server-docker_pz-backups:/b \
      alpine sh -c 'cp -a /b/pz-20260905-060000/. /data/zomboid/'
    ```
 
@@ -127,7 +127,7 @@ is a guess.
    otherwise.
 
    ```bash
-   docker run --rm -v pz-docker-server_pz-zomboid:/data/zomboid alpine \
+   docker run --rm -v zomboid-server-docker_pz-zomboid:/data/zomboid alpine \
      chown -R 1000:1000 /data/zomboid
    ```
 

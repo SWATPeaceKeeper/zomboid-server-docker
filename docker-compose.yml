@@ -1,9 +1,15 @@
 ---
+# Pinned so the volume names stay `zomboid-server-docker_*` no matter what the
+# checkout directory is called. Without it Compose derives the project name from
+# the directory, and every documented volume path breaks for anyone who cloned
+# into a differently named folder.
+name: zomboid-server-docker
+
 services:
   pz-server:
     build:
       context: .
-    image: ghcr.io/swatpeacekeeper/pz-docker-server:latest
+    image: ghcr.io/swatpeacekeeper/zomboid-server-docker:latest
     container_name: pz-server
     restart: unless-stopped
     # The entrypoint answers SIGTERM by sending `quit` and waiting for the world
@@ -44,7 +50,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backup
-    image: ghcr.io/swatpeacekeeper/pz-docker-server-backup:latest
+    image: ghcr.io/swatpeacekeeper/zomboid-server-docker-backup:latest
     container_name: pz-backup
     restart: unless-stopped
     stop_grace_period: 60s

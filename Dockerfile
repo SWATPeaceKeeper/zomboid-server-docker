@@ -23,7 +23,7 @@ FROM steamcmd/steamcmd:ubuntu-24@sha256:2fbec2969d6caf1d203b62a365c0198c17c7eb98
 LABEL org.opencontainers.image.title="Project Zomboid Dedicated Server" \
   org.opencontainers.image.description="Project Zomboid dedicated server, installed from Steam into a volume at runtime" \
   org.opencontainers.image.licenses="GPL-3.0-or-later" \
-  org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/pz-docker-server"
+  org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/zomboid-server-docker"
 
 # hadolint ignore=DL3008
 RUN apt-get update \
