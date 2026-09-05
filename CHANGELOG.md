@@ -9,6 +9,13 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-09-05
+
+First stable release. The container and Compose stack are complete and verified
+end to end: the smoke test starts a real server, waits for it to accept players,
+saves over RCON and stops it cleanly, and it runs on every pull request and
+nightly.
+
 ### Added
 
 - Server image based on `steamcmd/steamcmd:ubuntu-24`, pinned by digest, running
@@ -44,4 +51,5 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/commits/main
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/releases/tag/v1.0.0
