@@ -1,0 +1,65 @@
+# syntax=docker/dockerfile:1
+
+# ---- rcon-cli ----------------------------------------------------------------
+FROM steamcmd/steamcmd:ubuntu-24@sha256:2fbec2969d6caf1d203b62a365c0198c17c7eb9859b39f715c8acabfe917c182 AS rcon
+
+ARG RCON_VERSION=0.10.3
+ARG RCON_SHA256=6962a641ebf9a5957bd0cda1b8acf3e34a23686ae709f6c6a14ac3898521a5cc
+
+# The checksum verification below runs in a pipeline, where the default shell
+# would report success as long as the last command succeeds.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# hadolint ignore=DL3008
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates curl \
+  && rm -rf /var/lib/apt/lists/* \
+  && curl -fsSL -o /tmp/rcon.tar.gz \
+  "https://github.com/gorcon/rcon-cli/releases/download/v${RCON_VERSION}/rcon-${RCON_VERSION}-amd64_linux.tar.gz" \
+  && echo "${RCON_SHA256}  /tmp/rcon.tar.gz" | sha256sum -c - \
+  && tar -xzf /tmp/rcon.tar.gz -C /tmp \
+  && install -m 0755 "/tmp/rcon-${RCON_VERSION}-amd64_linux/rcon" /usr/local/bin/rcon
+
+# ---- runtime -----------------------------------------------------------------
+FROM debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+
+LABEL org.opencontainers.image.title="Project Zomboid backup sidecar" \
+  org.opencontainers.image.description="Scheduled world backups for a Project Zomboid dedicated server" \
+  org.opencontainers.image.licenses="GPL-3.0-or-later" \
+  org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/pz-docker-server"
+
+# hadolint ignore=DL3008
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+  ca-certificates \
+  curl \
+  tzdata \
+  zstd \
+  && rm -rf /var/lib/apt/lists/* \
+  && groupadd -g 1000 pz \
+  && useradd -u 1000 -g 1000 -m -d /home/pz -s /bin/bash pz \
+  && mkdir -p /data/backups /opt/pz \
+  && chown -R pz:pz /data /opt/pz
+
+COPY --from=rcon /usr/local/bin/rcon /usr/local/bin/rcon
+COPY --chown=pz:pz scripts/lib/log.sh /opt/pz/scripts/lib/log.sh
+COPY --chown=pz:pz scripts/backup/ /opt/pz/scripts/backup/
+
+RUN chmod 0755 /opt/pz/scripts/backup/entrypoint.sh \
+  /opt/pz/scripts/backup/backup-now.sh \
+  && ln -s /opt/pz/scripts/backup/backup-now.sh /usr/local/bin/backup-now
+
+ENV PZ_DATA_DIR=/data/zomboid \
+  BACKUP_DIR=/data/backups \
+  BACKUP_INTERVAL=6h \
+  BACKUP_KEEP=14 \
+  BACKUP_MODE=tar \
+  BACKUP_ON_START=true \
+  HOME=/home/pz
+
+# Numeric, so a host or orchestrator can resolve the id without the image's
+# passwd database.
+USER 1000:1000
+WORKDIR /data
+
+ENTRYPOINT ["/opt/pz/scripts/backup/entrypoint.sh"]
