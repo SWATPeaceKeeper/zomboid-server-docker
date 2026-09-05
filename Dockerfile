@@ -1,26 +1,21 @@
 # syntax=docker/dockerfile:1
 
 # ---- rcon-cli ----------------------------------------------------------------
-FROM steamcmd/steamcmd:ubuntu-24@sha256:2fbec2969d6caf1d203b62a365c0198c17c7eb9859b39f715c8acabfe917c182 AS rcon
+# Built from source rather than taken from the upstream release tarball. That
+# tarball was produced in 2023 with a Go toolchain whose standard library now
+# carries 41 HIGH/CRITICAL advisories, and they are compiled into the binary, so
+# no amount of updating the base image removes them. Compiling the same tagged
+# source with a current toolchain does.
+#
+# The version pin is verified by Go's module checksum database, which is a
+# stronger guarantee than the tarball hash it replaces.
+FROM golang:1.27-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS rcon
 
-ARG RCON_VERSION=0.10.3
-ARG RCON_SHA256=6962a641ebf9a5957bd0cda1b8acf3e34a23686ae709f6c6a14ac3898521a5cc
+ARG RCON_VERSION=v0.10.3
+ENV CGO_ENABLED=0
 
-# The checksum verification below runs in a pipeline, where the default shell
-# would report success as long as the last command succeeds.
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# The digest-pinned base image already fixes the toolchain; pinning apt versions
-# on top of it would break the build on every Ubuntu point release.
-# hadolint ignore=DL3008
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl \
-  && rm -rf /var/lib/apt/lists/* \
-  && curl -fsSL -o /tmp/rcon.tar.gz \
-  "https://github.com/gorcon/rcon-cli/releases/download/v${RCON_VERSION}/rcon-${RCON_VERSION}-amd64_linux.tar.gz" \
-  && echo "${RCON_SHA256}  /tmp/rcon.tar.gz" | sha256sum -c - \
-  && tar -xzf /tmp/rcon.tar.gz -C /tmp \
-  && install -m 0755 "/tmp/rcon-${RCON_VERSION}-amd64_linux/rcon" /usr/local/bin/rcon
+RUN go install "github.com/gorcon/rcon-cli/cmd/gorcon@${RCON_VERSION}" \
+  && install -m 0755 /go/bin/gorcon /usr/local/bin/rcon
 
 # ---- runtime -----------------------------------------------------------------
 FROM steamcmd/steamcmd:ubuntu-24@sha256:2fbec2969d6caf1d203b62a365c0198c17c7eb9859b39f715c8acabfe917c182

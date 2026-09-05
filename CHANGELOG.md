@@ -36,4 +36,12 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   nightly run, linting at versions identical to the pre-commit hooks, Trivy
   scanning and publication to GHCR.
 
+### Security
+
+- `rcon-cli` is compiled from its tagged source with a current Go toolchain
+  instead of being taken from the upstream release tarball. That tarball was
+  built in 2023, and the Go standard library baked into it carries 41
+  HIGH/CRITICAL advisories that no base image update can remove. Both images now
+  scan clean.
+
 [Unreleased]: https://github.com/SWATPeaceKeeper/pz-docker-server/commits/main
