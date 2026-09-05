@@ -1,0 +1,7 @@
+.git
+.github
+docs
+tests
+data
+backups
+*.md
