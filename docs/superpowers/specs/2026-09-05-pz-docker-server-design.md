@@ -95,7 +95,12 @@ applicable; public reachability is a UDP port forward on the router.
 
 Base: `steamcmd/steamcmd:ubuntu-24`, pinned by digest. Two stages — the first
 fetches `gorcon/rcon-cli` v0.10.3 and verifies its checksum, the second is the
-runtime image. Approximately 170 MB.
+runtime image.
+
+> **Corrected after implementation.** This section originally estimated ~170 MB,
+> read off Docker Hub's *compressed* figure for the base image. The base is 496 MB
+> uncompressed and the finished image is 519 MB — this project adds 23 MB. The
+> point of the design is unaffected: the ~7 GB of game files stay out of the image.
 
 The image contains SteamCMD, `rcon-cli` and the scripts. It does **not** contain
 Project Zomboid server files.
@@ -226,7 +231,7 @@ The smoke test is the part missing from every comparable image: build the image,
 start a container against a scratch volume, wait for the healthcheck to report
 healthy, issue `save` over RCON, `docker stop` it, then assert the exit was clean
 and `Saves/` contains data. Timeout 20 minutes, because a first boot downloads
-roughly 3 GB and generates a world. Steam downloads are intermittently flaky, so
+roughly 7 GB on Build 42 and generates a world. Steam downloads are flaky, so
 the install step retries.
 
 The nightly run exists to catch a Project Zomboid update breaking the image
@@ -292,7 +297,7 @@ Not planned:
 
 | Risk | Mitigation |
 |---|---|
-| First start takes 5–15 minutes and depends on Steam | Documented; healthcheck has a long `start_period`; install retries |
+| First start takes 10–20 minutes and depends on Steam | Documented; healthcheck has a long `start_period`; install retries |
 | A Project Zomboid update breaks startup | Nightly CI smoke test |
 | Build 42 with the 4 GB default heap is tight | README states the recommendation; the value is a single environment variable |
 | Steam download flakiness fails CI | Retry with backoff; nightly runs make a single failure non-blocking |
