@@ -1,0 +1,5 @@
+# Local Compose data when bind mounts are used instead of named volumes
+/data/
+/backups/
+.env
+*.tar.zst
