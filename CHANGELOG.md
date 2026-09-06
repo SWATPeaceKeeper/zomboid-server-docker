@@ -9,6 +9,35 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-06
+
+### Fixed
+
+- **The Compose stack could not install the server at all.** `pz-internal` was
+  declared `internal: true`, which has no route out, so SteamCMD died with
+  "Steamcmd needs to be online to update" and the documented quick start never
+  worked. RCON is kept off the internet by not publishing its port, which is what
+  was already happening — cutting the containers off from the network as well was
+  both unnecessary and fatal.
+- A fresh deployment no longer opens with an error. The startup backup ran before
+  the server had created a world and reported "Startup backup failed", which was
+  alarming and wrong. Having nothing to back up yet is now reported as a skip;
+  real failures are unchanged.
+
+### Added
+
+- `tests/compose-network.sh`, run in CI, starts a container on the Compose
+  network and checks it can reach the internet. The image smoke test structurally
+  cannot catch this: it uses `docker run` on the default bridge and never touches
+  the Compose network.
+
+### Changed
+
+- The README is now a complete guide: requirements, two ways to start, what the
+  first boot looks like, how players connect, admin access, day-to-day
+  operations, editing sandbox settings, running several servers, and
+  troubleshooting.
+
 ## [1.1.0] - 2026-09-06
 
 ### Added
@@ -70,6 +99,7 @@ nightly.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/releases/tag/v1.0.0
