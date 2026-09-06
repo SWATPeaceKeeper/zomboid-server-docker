@@ -9,6 +9,25 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-06
+
+### Added
+
+- The release workflow now pulls the image it just pushed and runs the full
+  end-to-end smoke test against it. Until now the smoke test only ever ran
+  against a locally rebuilt image: same source, different build, so the artefact
+  people actually pull had never been started by CI.
+- `tests/smoke.sh` accepts `SMOKE_SKIP_BUILD=true`, which pulls `SMOKE_IMAGE`
+  instead of building it and prints the digest under test.
+
+### Changed
+
+- `latest` now moves only when a version is tagged. It was previously applied on
+  every push to `main`, which made it a second name for `edge` and contradicted
+  what the README promised it meant.
+- Workflow permissions in the release pipeline are granted per job. `packages:
+  write` is limited to the publishing job; the verification job only reads.
+
 ## [1.0.0] - 2026-09-05
 
 First stable release. The container and Compose stack are complete and verified
@@ -51,5 +70,6 @@ nightly.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/releases/tag/v1.0.0

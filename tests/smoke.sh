@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # End-to-end test: the server installs, becomes healthy, saves and shuts down
 # cleanly. This is the check that a published image is actually usable.
+#
+# With SMOKE_SKIP_BUILD=true it pulls SMOKE_IMAGE instead of building it, which
+# is how the release workflow exercises the artefact people actually pull. A
+# locally rebuilt image comes from the same source but is a different build, so
+# testing only that leaves the published one unstarted.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -15,8 +20,14 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "==> Building ${IMAGE}"
-docker build -t "${IMAGE}" "${REPO_ROOT}"
+if [ "${SMOKE_SKIP_BUILD:-false}" = "true" ]; then
+  echo "==> Pulling ${IMAGE}"
+  docker pull -q "${IMAGE}" >/dev/null
+  echo "==> Digest: $(docker inspect -f '{{index .RepoDigests 0}}' "${IMAGE}")"
+else
+  echo "==> Building ${IMAGE}"
+  docker build -t "${IMAGE}" "${REPO_ROOT}"
+fi
 
 echo "==> Starting ${CONTAINER}"
 docker volume create "${CONTAINER}-server" >/dev/null

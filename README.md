@@ -177,8 +177,11 @@ git tag -a v1.4.2 -m "Fix the backup rotation off-by-one"
 git push origin v1.4.2
 ```
 
-The release workflow builds both images, scans them with Trivy and pushes every
-tag above. `latest` and `edge` also move on every push to `main`.
+The release workflow builds both images, scans them with Trivy, pushes every tag
+above, and then **pulls the pushed server image back and starts it** — so the
+artefact you download is the one that was proven to boot, not a local rebuild of
+the same source. `edge` moves on every push to `main`; `latest` moves only when a
+version is tagged.
 
 Note that a version tag records what this wrapper does — it does not freeze the
 Project Zomboid version. With `UPDATE_ON_START=true` the game updates itself from
