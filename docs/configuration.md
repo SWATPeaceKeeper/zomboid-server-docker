@@ -25,6 +25,8 @@
 | `MODFOLDERS` | unset | Passes `-modfolders`, controlling where mods are loaded from and in what order. |
 | `STEAM_RETRIES` | `3` | SteamCMD attempts before the container gives up. |
 | `STEAM_RETRY_DELAY` | `15` | Seconds between those attempts. |
+| `PZ_JMX_METRICS` | `false` | Loads the Prometheus JMX agent into the game's JVM and serves `jvm_*` metrics on `PZ_JMX_PORT`. Off by default: it runs third-party code inside the JVM and opens a listener. |
+| `PZ_JMX_PORT` | `9404` | Where the JMX agent listens, when enabled. Not published to the host. |
 | `PZ_SERVER_DIR` | `/data/server` | Installation directory. Change only if you remap the volumes. |
 | `PZ_DATA_DIR` | `/data/zomboid` | Config, saves and logs. Passed to the server as `-cachedir=`. |
 | `TZ` | `Europe/Berlin` | Container timezone, which is what log timestamps use. |
@@ -55,6 +57,19 @@ database and start over.
 | `RCON_PASSWORD` | — | **Required.** Without it the sidecar backs up without asking the server to save first, and says so in the log. |
 | `NTFY_URL` | unset | When set, backup failures are posted here. Unset means nothing external is contacted. |
 | `NTFY_TOKEN` | unset | Bearer token for that endpoint, if it needs one. |
+
+## Metrics exporter
+
+| Variable | Default | Effect |
+|---|---|---|
+| `RCON_HOST` | `pz-server` | Server to query for the player list. |
+| `RCON_PORT` | `27015` | Must match the server. |
+| `RCON_PASSWORD` | — | **Required.** Without it the exporter refuses to start, rather than reporting `pz_up 0` forever and looking like an outage. |
+| `RCON_TIMEOUT` | `5s` | Per-scrape timeout for the RCON query. |
+| `LISTEN_ADDR` | `:9401` | Where `/metrics` is served. Not published to the host. |
+| `PZ_SERVER_DIR` | `/data/server` | Read-only; where the Steam manifest is read for the build id. |
+| `BACKUP_DIR` | `/data/backups` | Read-only; where the status file and archives are read. |
+| `PZ_EXPORT_PLAYER_NAMES` | `true` | Emits one `pz_player_info` series per connected player. Set to `false` on a busy public server, where the series count otherwise grows with every player who has ever joined. |
 
 ## What the container does and does not touch
 

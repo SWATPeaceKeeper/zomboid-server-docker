@@ -34,6 +34,7 @@ Three things set this apart from the other images:
 - [Mods](#mods)
 - [Memory](#memory)
 - [Backups](#backups)
+- [Metrics](#metrics)
 - [Troubleshooting](#troubleshooting)
 - [Images and versioning](#images-and-versioning)
 
@@ -471,6 +472,77 @@ similar already covers the directory.
 **Read [`docs/backup-restore.md`](docs/backup-restore.md) and try the restore
 once before you need it.** A restore procedure nobody has run is a guess.
 
+## Metrics
+
+A third container exports Prometheus metrics on port `9401`. It only reads: RCON
+queries plus two read-only volume mounts, so it cannot change the server or the
+backups.
+
+**Container CPU, memory and uptime are deliberately not exported.** cAdvisor
+already produces those for every container, and a second source for the same
+number is a source of disagreement. What is exported is what cAdvisor cannot see.
+
+| Metric | Meaning |
+|---|---|
+| `pz_up` | 1 when the server answered RCON on the last scrape |
+| `pz_players_online` | Players connected |
+| `pz_player_info{name}` | One series per connected player |
+| `pz_server_info{build_id}` | The installed Steam build id |
+| `pz_backup_last_run_timestamp_seconds` | When a backup was last attempted |
+| `pz_backup_last_success_timestamp_seconds` | When one last succeeded |
+| `pz_backup_last_size_bytes` | Size of the newest archive |
+| `pz_backup_count` | Generations kept |
+| `pz_scrape_errors_total{source}` | Failed collections, by source |
+
+When the server is unreachable the player metrics are **omitted rather than set
+to zero**. A server that is down is not a server with nobody on it, and a
+dashboard must not make an outage look like a quiet evening.
+
+`pz_player_info` carries player names as labels. On a busy public server the
+series count grows with every player who has ever joined, so set
+`PZ_EXPORT_PLAYER_NAMES=false` there.
+
+### Scraping it
+
+The port is not published. Put Prometheus on the same Docker network:
+
+```bash
+docker network create monitoring
+docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
+```
+
+```yaml
+scrape_configs:
+  - job_name: project-zomboid
+    static_configs:
+      - targets: ["pz-exporter:9401"]
+```
+
+### JVM metrics
+
+Off by default, because it loads third-party code into the game's JVM and opens
+another listener. To turn it on:
+
+```yaml
+environment:
+  PZ_JMX_METRICS: "true"
+```
+
+The server then serves `jvm_*` on port `9404` through the Prometheus JMX agent:
+heap by area, garbage collection, threads. Add a second scrape job for
+`pz-server:9404`.
+
+The useful one is `jvm_memory_used_bytes{area="heap"}` against
+`jvm_memory_max_bytes{area="heap"}` — that pair is what actually tells you
+whether `PZ_MAX_RAM` is too small.
+
+### Dashboard
+
+Import [`grafana/pz-dashboard.json`](grafana/pz-dashboard.json) and pick your
+Prometheus when prompted. It shows server availability, players, backup age
+against thresholds, backup size, the game build and — when enabled — heap against
+its ceiling.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
@@ -492,6 +564,7 @@ More, with commands: [`docs/runbook.md`](docs/runbook.md).
 |---|---|
 | `ghcr.io/swatpeacekeeper/zomboid-server-docker` | The server |
 | `ghcr.io/swatpeacekeeper/zomboid-server-docker-backup` | The backup sidecar |
+| `ghcr.io/swatpeacekeeper/zomboid-server-docker-exporter` | The metrics exporter |
 
 | Tag | Meaning | Use it when |
 |---|---|---|

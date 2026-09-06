@@ -9,6 +9,37 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-06
+
+### Added
+
+- A metrics exporter, published as
+  `ghcr.io/swatpeacekeeper/zomboid-server-docker-exporter`. It reports players
+  online, backup health, server reachability and the installed Steam build id on
+  port 9401. It only reads: RCON queries plus two read-only volume mounts.
+  Container CPU and memory are deliberately not exported, because cAdvisor
+  already produces them and two sources for one number disagree eventually.
+- Optional JVM metrics through the Prometheus JMX agent, enabled with
+  `PZ_JMX_METRICS=true`. Off by default: it loads third-party code into the
+  game's JVM and opens a listener.
+- A Grafana dashboard in `grafana/pz-dashboard.json` and a
+  `docker-compose.monitoring.yml` overlay for attaching to an existing monitoring
+  network.
+- The backup sidecar writes `${BACKUP_DIR}/.status` after every run, recording
+  `ok`, `failed` or `skipped`. Without it a failed backup was invisible from
+  outside the container: files show what exists, not what is missing.
+
+### Fixed
+
+- **The stack test was verifying released images instead of the code under
+  test.** The services carry both `image:` and `build:`, and Compose's default
+  pull policy prefers the published image, so `docker compose up -d` ran the last
+  release. Every previous stack run proved less than it appeared to. The test now
+  forces `--build`.
+- The README claimed Compose builds locally on first run, which was wrong for the
+  same reason, and told people to use `--build` only after editing. It now says
+  to use it whenever you intend to change anything.
+
 ## [1.1.1] - 2026-09-06
 
 ### Fixed
@@ -99,7 +130,8 @@ nightly.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/releases/tag/v1.0.0
