@@ -81,5 +81,13 @@ volumes:
   pz-backups:
 
 networks:
+  # A plain bridge network, deliberately not `internal: true`. The server has to
+  # reach Steam to install itself and to download Workshop items, and an internal
+  # network has no route out at all - SteamCMD fails with "Steamcmd needs to be
+  # online to update" before anything else happens.
+  #
+  # RCON is kept off the internet by not publishing port 27015, not by cutting
+  # the container off from the network. Only the two UDP game ports are
+  # published, so RCON is reachable from other containers on this network and
+  # from the Docker host itself, and from nowhere else.
   pz-internal:
-    internal: true

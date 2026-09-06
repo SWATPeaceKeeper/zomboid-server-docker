@@ -70,10 +70,34 @@ teardown() {
   [ "$status" -ne 0 ]
 }
 
-@test "backup_create fails when the source has no Saves directory" {
+# A brand new deployment has no world yet while SteamCMD is still downloading.
+# That is reported as 2 rather than 1 so the scheduler can stay quiet about it,
+# instead of opening every fresh install with an error.
+@test "backup_create returns 2, not a failure, when there is no world yet" {
   rm -rf "${DATA_DIR}/Saves"
   run backup_create "${DATA_DIR}" "${BACKUP_DIR}" "tar"
-  [ "$status" -ne 0 ]
+  [ "$status" -eq 2 ]
+  [[ "$output" != *"ERROR"* ]]
+}
+
+@test "backup_create still reports a real failure as 1" {
+  mkdir -p "${TEST_TMP}/bin"
+  printf '#!/usr/bin/env bash\nexit 2\n' >"${TEST_TMP}/bin/tar"
+  chmod +x "${TEST_TMP}/bin/tar"
+  # Each bats test runs in its own subshell, so shadowing tar here cannot leak
+  # into another test. That locality is the point, not an accident.
+  # shellcheck disable=SC2030,SC2031
+  PATH="${TEST_TMP}/bin:${PATH}"
+
+  run backup_create "${DATA_DIR}" "${BACKUP_DIR}" "tar"
+  [ "$status" -eq 1 ]
+}
+
+@test "backup-now propagates 2 when there is no world yet" {
+  rm -rf "${DATA_DIR}/Saves"
+  PZ_DATA_DIR="${DATA_DIR}" BACKUP_DIR="${BACKUP_DIR}" \
+    run "${REPO_ROOT}/scripts/backup/backup-now.sh"
+  [ "$status" -eq 2 ]
 }
 
 @test "backup_create works when there is no Server directory yet" {
@@ -89,6 +113,9 @@ teardown() {
   mkdir -p "${TEST_TMP}/bin"
   printf '#!/usr/bin/env bash\nexit 2\n' >"${TEST_TMP}/bin/tar"
   chmod +x "${TEST_TMP}/bin/tar"
+  # Each bats test runs in its own subshell, so shadowing tar here cannot leak
+  # into another test. That locality is the point, not an accident.
+  # shellcheck disable=SC2030,SC2031
   PATH="${TEST_TMP}/bin:${PATH}"
 
   run backup_create "${DATA_DIR}" "${BACKUP_DIR}" "tar"

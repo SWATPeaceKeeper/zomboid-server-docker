@@ -39,12 +39,21 @@ save_world() {
 }
 
 main() {
-  local archive
+  local archive status=0
   save_world
-  if ! archive="$(backup_create "${PZ_DATA_DIR}" "${BACKUP_DIR}" "${BACKUP_MODE}")"; then
+  archive="$(backup_create "${PZ_DATA_DIR}" "${BACKUP_DIR}" "${BACKUP_MODE}")" || status=$?
+
+  # 2 is "no world yet", which happens on a fresh deployment while the server is
+  # still installing. It is reported back so the scheduler can stay quiet, but it
+  # is not a failure worth notifying anyone about.
+  if [ "${status}" -eq 2 ]; then
+    return 2
+  fi
+  if [ "${status}" -ne 0 ]; then
     backup_notify "failure" "Backup failed; see the container log."
     return 1
   fi
+
   log_info "Created ${archive}"
   backup_rotate "${BACKUP_DIR}" "${BACKUP_KEEP}"
 }

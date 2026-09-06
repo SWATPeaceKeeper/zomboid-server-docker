@@ -26,6 +26,12 @@ jobs:
       - name: Run bats unit tests
         run: ./tests/run-unit.sh
 
+      # Cheap, and it covers a gap the image smoke test structurally cannot: that
+      # one uses `docker run` on the default bridge and never touches the Compose
+      # network the stack actually runs on.
+      - name: Check the Compose network can reach the internet
+        run: ./tests/compose-network.sh
+
   smoke:
     runs-on: ubuntu-latest
     needs: unit

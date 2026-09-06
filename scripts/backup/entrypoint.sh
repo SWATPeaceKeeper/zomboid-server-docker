@@ -20,6 +20,20 @@ handle_term() {
 }
 trap handle_term TERM INT
 
+# Runs one backup. Exit code 2 means the server has not created a world yet,
+# which is the normal state of a fresh deployment while SteamCMD is still
+# downloading. Reporting that as a failure would make every new install open with
+# an error that nothing is wrong with.
+run_backup() {
+  local label="$1" status=0
+  "${SCRIPT_DIR}/backup-now.sh" || status=$?
+  case "${status}" in
+  0) ;;
+  2) log_info "${label} backup skipped: the server has no world yet" ;;
+  *) log_error "${label} backup failed" ;;
+  esac
+}
+
 main() {
   local interval_seconds
   interval_seconds="$(backup_duration_to_seconds "${BACKUP_INTERVAL}")"
@@ -28,7 +42,7 @@ main() {
   # A backup taken at start captures the state before the freshly started server
   # writes to it, which is in practice the state of the last clean shutdown.
   if [ "${BACKUP_ON_START}" = "true" ]; then
-    "${SCRIPT_DIR}/backup-now.sh" || log_error "Startup backup failed"
+    run_backup "Startup"
   fi
 
   while [ -z "${TERMINATE}" ]; do
@@ -39,7 +53,7 @@ main() {
     if [ -n "${TERMINATE}" ]; then
       break
     fi
-    "${SCRIPT_DIR}/backup-now.sh" || log_error "Scheduled backup failed"
+    run_backup "Scheduled"
   done
 
   log_info "Backup loop stopped"

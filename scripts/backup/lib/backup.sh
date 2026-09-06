@@ -27,10 +27,12 @@ backup_create() {
   local data_dir="$1" backup_dir="$2" mode="$3"
   local stamp target sources=()
 
+  # Exit code 2 means "there is nothing to back up yet", which is what a brand
+  # new deployment looks like while the server is still installing. Callers can
+  # tell it apart from a real failure (1) and stay quiet about it.
   if [ ! -d "${data_dir}/Saves" ]; then
-    log_error "No Saves directory in ${data_dir}; refusing to write an empty" \
-      "backup."
-    return 1
+    log_warn "No world in ${data_dir} yet; nothing to back up."
+    return 2
   fi
 
   # The Server directory only appears once the server has written its config, so
