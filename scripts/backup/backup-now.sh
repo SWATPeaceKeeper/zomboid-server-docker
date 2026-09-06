@@ -38,8 +38,27 @@ save_world() {
   log_warn "Could not reach RCON at ${RCON_HOST}:${RCON_PORT}; backing up anyway"
 }
 
+# Records the outcome of this run where the exporter can see it. Written for
+# every outcome, because "nothing changed since yesterday" and "yesterday's backup
+# failed" have to be distinguishable from the outside.
+write_status() {
+  local state="$1" archive="${2:-}" bytes="${3:-0}"
+  local status_file="${BACKUP_DIR}/.status"
+
+  mkdir -p "${BACKUP_DIR}"
+  {
+    printf 'timestamp=%s\n' "$(date -u +%s)"
+    printf 'status=%s\n' "${state}"
+    printf 'archive=%s\n' "${archive}"
+    printf 'bytes=%s\n' "${bytes}"
+  } >"${status_file}.tmp"
+
+  # Renamed into place so a reader never catches a half-written file.
+  mv "${status_file}.tmp" "${status_file}"
+}
+
 main() {
-  local archive status=0
+  local archive status=0 bytes=0
   save_world
   archive="$(backup_create "${PZ_DATA_DIR}" "${BACKUP_DIR}" "${BACKUP_MODE}")" || status=$?
 
@@ -47,13 +66,17 @@ main() {
   # still installing. It is reported back so the scheduler can stay quiet, but it
   # is not a failure worth notifying anyone about.
   if [ "${status}" -eq 2 ]; then
+    write_status "skipped"
     return 2
   fi
   if [ "${status}" -ne 0 ]; then
+    write_status "failed"
     backup_notify "failure" "Backup failed; see the container log."
     return 1
   fi
 
+  bytes="$(du -sb "${archive}" 2>/dev/null | cut -f1)"
+  write_status "ok" "${archive}" "${bytes:-0}"
   log_info "Created ${archive}"
   backup_rotate "${BACKUP_DIR}" "${BACKUP_KEEP}"
 }

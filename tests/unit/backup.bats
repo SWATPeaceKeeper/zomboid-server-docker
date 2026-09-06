@@ -189,3 +189,46 @@ teardown() {
   run backup_notify "failure" "something broke"
   [ "$status" -eq 0 ]
 }
+
+@test "backup-now writes a status file on success" {
+  PZ_DATA_DIR="${DATA_DIR}" BACKUP_DIR="${BACKUP_DIR}" BACKUP_MODE="tar" \
+    run "${REPO_ROOT}/scripts/backup/backup-now.sh"
+  [ "$status" -eq 0 ]
+
+  [ -f "${BACKUP_DIR}/.status" ]
+  grep -q '^status=ok$' "${BACKUP_DIR}/.status"
+  grep -qE '^timestamp=[0-9]+$' "${BACKUP_DIR}/.status"
+  grep -qE '^bytes=[0-9]+$' "${BACKUP_DIR}/.status"
+  grep -qE '^archive=.*\.tar\.zst$' "${BACKUP_DIR}/.status"
+}
+
+@test "backup-now records a skip when there is no world yet" {
+  rm -rf "${DATA_DIR}/Saves"
+  PZ_DATA_DIR="${DATA_DIR}" BACKUP_DIR="${BACKUP_DIR}" \
+    run "${REPO_ROOT}/scripts/backup/backup-now.sh"
+  [ "$status" -eq 2 ]
+  grep -q '^status=skipped$' "${BACKUP_DIR}/.status"
+  grep -q '^bytes=0$' "${BACKUP_DIR}/.status"
+}
+
+@test "backup-now records a failure when the archiver fails" {
+  mkdir -p "${TEST_TMP}/bin"
+  printf '#!/usr/bin/env bash\nexit 2\n' >"${TEST_TMP}/bin/tar"
+  chmod +x "${TEST_TMP}/bin/tar"
+  # Each bats test runs in its own subshell, so shadowing tar here cannot leak
+  # into another test. That locality is the point, not an accident.
+  # shellcheck disable=SC2030,SC2031
+  PATH="${TEST_TMP}/bin:${PATH}"
+
+  PZ_DATA_DIR="${DATA_DIR}" BACKUP_DIR="${BACKUP_DIR}" BACKUP_MODE="tar" \
+    run "${REPO_ROOT}/scripts/backup/backup-now.sh"
+  [ "$status" -eq 1 ]
+  grep -q '^status=failed$' "${BACKUP_DIR}/.status"
+}
+
+@test "backup_rotate does not delete the status file" {
+  touch "${BACKUP_DIR}/.status"
+  touch "${BACKUP_DIR}/pz-20260101-000000.tar.zst"
+  backup_rotate "${BACKUP_DIR}" 0
+  [ -f "${BACKUP_DIR}/.status" ]
+}
