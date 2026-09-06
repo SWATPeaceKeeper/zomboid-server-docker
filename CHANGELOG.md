@@ -14,7 +14,8 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 ### Added
 
 - A metrics exporter, published as
-  `ghcr.io/swatpeacekeeper/zomboid-server-docker-exporter`. It reports players
+  `ghcr.io/swatpeacekeeper/zomboid-server-docker-exporter`, built `FROM scratch`
+  so it carries no packages and therefore no package vulnerabilities. It reports players
   online, backup health, server reachability and the installed Steam build id on
   port 9401. It only reads: RCON queries plus two read-only volume mounts.
   Container CPU and memory are deliberately not exported, because cAdvisor

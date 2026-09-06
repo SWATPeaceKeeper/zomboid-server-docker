@@ -10,6 +10,10 @@ import (
 	"strconv"
 	"time"
 
+	// The image has no filesystem beyond this binary, so the zone database has to
+	// travel inside it or TZ would silently fall back to UTC.
+	_ "time/tzdata"
+
 	"github.com/SWATPeaceKeeper/zomboid-server-docker/exporter/internal/backups"
 	"github.com/SWATPeaceKeeper/zomboid-server-docker/exporter/internal/collector"
 	"github.com/SWATPeaceKeeper/zomboid-server-docker/exporter/internal/manifest"

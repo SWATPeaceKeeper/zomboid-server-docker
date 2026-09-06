@@ -93,8 +93,11 @@ if [ "${archive_count//[[:space:]]/}" -lt 1 ]; then
 fi
 
 echo "==> Checking the exporter answers against the live server"
-metrics="$(docker compose exec -T pz-exporter \
-  wget -qO- http://127.0.0.1:9401/metrics)"
+# Fetched from another container rather than from inside the exporter, whose
+# image is scratch and has no shell. This also proves it is reachable over the
+# network, which is how Prometheus will reach it.
+metrics="$(docker compose exec -T pz-backup \
+  curl -sf --max-time 20 http://pz-exporter:9401/metrics)"
 
 if ! printf '%s' "${metrics}" | grep -qE '^pz_up 1$'; then
   echo "!! pz_up is not 1; the exporter cannot reach the server over RCON" >&2
@@ -124,8 +127,8 @@ fi
 echo "==> Exporter reports pz_up 1, the backup and the build id"
 
 echo "==> Checking the JMX agent loaded into the game JVM"
-jvm_metrics="$(docker compose exec -T pz-exporter \
-  wget -qO- http://pz-server:9404/metrics 2>/dev/null || true)"
+jvm_metrics="$(docker compose exec -T pz-backup \
+  curl -sf --max-time 20 http://pz-server:9404/metrics 2>/dev/null || true)"
 # The metric is jvm_memory_used_bytes, not jvm_memory_bytes_used: the Prometheus
 # Java client renamed it between 0.x and 1.x. Both are checked so that a future
 # rename fails with a clear message rather than looking like a broken agent.

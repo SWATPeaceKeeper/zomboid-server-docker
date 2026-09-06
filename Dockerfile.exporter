@@ -10,20 +10,28 @@ COPY exporter/ ./
 ENV CGO_ENABLED=0
 RUN go build -trimpath -ldflags="-s -w" -o /out/pz-exporter .
 
-FROM alpine:3@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
+# Nothing but the binary.
+#
+# This started on alpine, which was pleasant to debug and shipped an OpenSSL the
+# exporter never calls: it speaks plain TCP to RCON and serves plain HTTP. Two
+# HIGH advisories in that unused library blocked a release, and would have gone
+# on doing so every few weeks. A base with no packages has no package
+# vulnerabilities, which is a better answer than patching one forever.
+#
+# The trade is that there is no shell to exec into. The container's job is to
+# answer /metrics, and whether it does is visible from outside it.
+FROM scratch
 
 LABEL org.opencontainers.image.title="Project Zomboid metrics exporter" \
   org.opencontainers.image.description="Prometheus metrics for a Project Zomboid server and its backups" \
   org.opencontainers.image.licenses="GPL-3.0-or-later" \
   org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/zomboid-server-docker"
 
-RUN addgroup -g 1000 pz && adduser -u 1000 -G pz -D -h /home/pz pz
+COPY --from=build /out/pz-exporter /pz-exporter
 
-COPY --from=build /out/pz-exporter /usr/local/bin/pz-exporter
-
-# Numeric, so a host or orchestrator can resolve the id without the image's
-# passwd database.
+# Numeric because there is no passwd database to resolve a name against, which
+# is exactly the point of this base.
 USER 1000:1000
 EXPOSE 9401
 
-ENTRYPOINT ["/usr/local/bin/pz-exporter"]
+ENTRYPOINT ["/pz-exporter"]
