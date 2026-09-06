@@ -26,6 +26,12 @@ jobs:
       - name: Run bats unit tests
         run: ./tests/run-unit.sh
 
+      - name: Run Go tests
+        run: |
+          docker run --rm -v "${PWD}/exporter:/src" -w /src \
+            golang:1.27-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 \
+            go test ./...
+
       # Cheap, and it covers a gap the image smoke test structurally cannot: that
       # one uses `docker run` on the default bridge and never touches the Compose
       # network the stack actually runs on.

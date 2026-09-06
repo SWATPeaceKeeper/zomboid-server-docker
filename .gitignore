@@ -3,3 +3,6 @@
 /backups/
 .env
 *.tar.zst
+
+# The compiled exporter binary, if built outside a container
+/exporter/exporter

@@ -18,6 +18,7 @@ env:
   HADOLINT_IMAGE: hadolint/hadolint:v2.15.1
   YAMLLINT_VERSION: 1.38.0
   ZIZMOR_VERSION: 1.30.0
+  GO_IMAGE: golang:1.27-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728
 
 jobs:
   lint:
@@ -43,6 +44,13 @@ jobs:
             echo "== ${dockerfile}"
             docker run --rm -i "${HADOLINT_IMAGE}" hadolint - <"${dockerfile}"
           done
+
+      # Run from the same pinned toolchain the release build uses, so a finding
+      # here cannot differ from one in the image.
+      - name: Check Go formatting and vet
+        run: |
+          docker run --rm -v "${PWD}/exporter:/src" -w /src "${GO_IMAGE}" \
+            sh -c 'test -z "$(gofmt -l .)" || { gofmt -d .; exit 1; }; go vet ./...'
 
       - name: Lint YAML
         run: |
