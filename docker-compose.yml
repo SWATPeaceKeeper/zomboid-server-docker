@@ -75,6 +75,30 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  pz-exporter:
+    build:
+      context: .
+      dockerfile: Dockerfile.exporter
+    image: ghcr.io/swatpeacekeeper/zomboid-server-docker-exporter:latest
+    container_name: pz-exporter
+    restart: unless-stopped
+    depends_on:
+      - pz-server
+    environment:
+      RCON_HOST: "pz-server"
+      RCON_PORT: "${RCON_PORT:-27015}"
+      RCON_PASSWORD: "${PZ_RCON_PASSWORD:?set PZ_RCON_PASSWORD in your .env}"
+      PZ_EXPORT_PLAYER_NAMES: "${PZ_EXPORT_PLAYER_NAMES:-true}"
+      TZ: "${TZ:-Europe/Berlin}"
+    volumes:
+      # Read-only throughout: the exporter observes, it never changes anything.
+      - pz-server:/data/server:ro
+      - pz-backups:/data/backups:ro
+    networks:
+      - pz-internal
+    security_opt:
+      - no-new-privileges:true
+
 volumes:
   pz-server:
   pz-zomboid:
