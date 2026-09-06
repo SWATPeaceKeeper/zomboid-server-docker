@@ -126,8 +126,13 @@ echo "==> Exporter reports pz_up 1, the backup and the build id"
 echo "==> Checking the JMX agent loaded into the game JVM"
 jvm_metrics="$(docker compose exec -T pz-exporter \
   wget -qO- http://pz-server:9404/metrics 2>/dev/null || true)"
-if ! printf '%s' "${jvm_metrics}" | grep -q '^jvm_memory_bytes_used'; then
-  echo "!! No jvm_ metrics on pz-server:9404 although PZ_JMX_METRICS is true." >&2
+# The metric is jvm_memory_used_bytes, not jvm_memory_bytes_used: the Prometheus
+# Java client renamed it between 0.x and 1.x. Both are checked so that a future
+# rename fails with a clear message rather than looking like a broken agent.
+if ! printf '%s' "${jvm_metrics}" | grep -qE '^jvm_memory_(used_bytes|bytes_used)'; then
+  echo "!! No jvm heap metrics on pz-server:9404 although PZ_JMX_METRICS is true." >&2
+  echo "-- jvm_ metric names actually served --" >&2
+  printf '%s\n' "${jvm_metrics}" | grep -oE '^jvm_[a-z_]+' | sort -u | head -15 >&2 || true
 
   echo "-- the agent argument in ProjectZomboid64.json --" >&2
   docker compose exec -T pz-server \
@@ -153,7 +158,7 @@ if ! printf '%s' "${jvm_metrics}" | grep -q '^jvm_memory_bytes_used'; then
 
   exit 1
 fi
-echo "==> JMX agent is serving jvm_ metrics"
+echo "==> JMX agent is serving jvm heap metrics"
 
 echo "==> Stopping the stack and checking the shutdown is clean"
 docker compose stop
