@@ -1,0 +1,40 @@
+---
+# Overlay for an existing Prometheus that scrapes over a shared Docker network.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d
+#
+# The network is external and must already exist. This file does not create it,
+# because the monitoring stack owns it:
+#
+#   docker network create monitoring
+#
+# Nothing is published to the host: Prometheus reaches both targets over the
+# shared network, and nothing else needs to.
+#
+# Scrape configuration for the Prometheus side:
+#
+#   scrape_configs:
+#     - job_name: project-zomboid
+#       static_configs:
+#         - targets: ["pz-exporter:9401"]
+#     # Only when PZ_JMX_METRICS=true
+#     - job_name: project-zomboid-jvm
+#       static_configs:
+#         - targets: ["pz-server:9404"]
+services:
+  pz-exporter:
+    networks:
+      - pz-internal
+      - monitoring
+
+  # Only needs the monitoring network when PZ_JMX_METRICS=true, which is what
+  # serves jvm_* on 9404. Joining it unconditionally costs nothing when the agent
+  # is off, and saves a second overlay file.
+  pz-server:
+    networks:
+      - pz-internal
+      - monitoring
+
+networks:
+  monitoring:
+    external: true
