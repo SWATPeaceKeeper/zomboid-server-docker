@@ -32,6 +32,10 @@ jobs:
       - name: Check the Compose network can reach the internet
         run: ./tests/compose-network.sh
 
+  # Drives the Compose stack, which is what the documentation tells people to
+  # run. The image-level test in tests/smoke.sh covers a different path and runs
+  # in the release workflow against the published artefact, so neither is
+  # redundant and the 7 GB download happens once per workflow.
   smoke:
     runs-on: ubuntu-latest
     needs: unit
@@ -50,11 +54,11 @@ jobs:
             /usr/local/lib/android "${AGENT_TOOLSDIRECTORY:-/opt/hostedtoolcache}"
           df -h /
 
-      - name: Run the smoke test
+      - name: Run the stack smoke test
         env:
-          SMOKE_TIMEOUT: "2400"
-        run: ./tests/smoke.sh
+          STACK_TIMEOUT: "2400"
+        run: ./tests/stack-smoke.sh
 
-      - name: Show the server log on failure
+      - name: Show the logs on failure
         if: failure()
-        run: docker ps --all --filter 'name=pz-smoke' --format '{{.Names}}' | xargs -r -I{} docker logs --tail 200 {}
+        run: docker compose logs --tail 200 || true
