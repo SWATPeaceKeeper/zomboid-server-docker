@@ -1,0 +1,8 @@
+---
+# Configuration for the Prometheus JMX agent, used only when PZ_JMX_METRICS=true.
+#
+# No MBean rules are defined on purpose. The defaults already export the standard
+# jvm_* metrics - heap by area, garbage collection, threads, class loading - and
+# Project Zomboid registers no MBeans of its own worth reading.
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true

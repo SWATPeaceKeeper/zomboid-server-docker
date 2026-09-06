@@ -32,6 +32,10 @@ services:
       SERVER_PASSWORD: "${PZ_SERVER_PASSWORD:-}"
       MOD_IDS: "${MOD_IDS:-}"
       WORKSHOP_IDS: "${WORKSHOP_IDS:-}"
+      # Off by default: it loads third-party code into the game's JVM and opens
+      # a listener. See the Metrics section of the README.
+      PZ_JMX_METRICS: "${PZ_JMX_METRICS:-false}"
+      PZ_JMX_PORT: "${PZ_JMX_PORT:-9404}"
       TZ: "${TZ:-Europe/Berlin}"
     ports:
       # Only the game ports are published. RCON stays on the internal network:

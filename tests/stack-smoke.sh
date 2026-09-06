@@ -19,6 +19,10 @@ export PZ_ADMIN_PASSWORD="${PZ_ADMIN_PASSWORD:-stack-smoke-admin-password}"
 export PZ_RCON_PASSWORD="${PZ_RCON_PASSWORD:-stack-smoke-rcon-password}"
 export SERVER_NAME="${SERVER_NAME:-stacksmoke}"
 export PZ_MAX_RAM="${PZ_MAX_RAM:-3g}"
+# Deliberately not the default. The default path - no agent in the JVM - is
+# covered by the release workflow's check of the published image, so turning it
+# on here means both paths are exercised somewhere rather than only the easy one.
+export PZ_JMX_METRICS="${PZ_JMX_METRICS:-true}"
 
 cd "${REPO_ROOT}"
 
@@ -113,6 +117,18 @@ if ! printf '%s' "${metrics}" | grep -q '^pz_server_info{build_id='; then
   exit 1
 fi
 echo "==> Exporter reports pz_up 1, the backup and the build id"
+
+echo "==> Checking the JMX agent loaded into the game JVM"
+jvm_metrics="$(docker compose exec -T pz-exporter \
+  wget -qO- http://pz-server:9404/metrics 2>/dev/null || true)"
+if ! printf '%s' "${jvm_metrics}" | grep -q '^jvm_memory_bytes_used'; then
+  echo "!! No jvm_ metrics on pz-server:9404 although PZ_JMX_METRICS is true." >&2
+  echo "!! The agent did not load, or the server did not start with it." >&2
+  docker compose exec -T pz-server \
+    sh -c 'grep -o "javaagent[^\"]*" /data/server/ProjectZomboid64.json' >&2 || true
+  exit 1
+fi
+echo "==> JMX agent is serving jvm_ metrics"
 
 echo "==> Stopping the stack and checking the shutdown is clean"
 docker compose stop

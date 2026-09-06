@@ -93,6 +93,11 @@ configure_phase() {
   fi
 
   jvm_set_heap "${PZ_SERVER_DIR}/ProjectZomboid64.json" "${PZ_MAX_RAM}"
+
+  if [ "${PZ_JMX_METRICS:-false}" = "true" ]; then
+    jvm_set_jmx_agent "${PZ_SERVER_DIR}/ProjectZomboid64.json" \
+      "/opt/pz/jmx_prometheus_javaagent.jar" "${PZ_JMX_PORT:-9404}"
+  fi
 }
 
 # Adapted from Danixu/project-zomboid-server-docker (scripts/entry.sh:325-377,

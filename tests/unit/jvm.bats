@@ -9,6 +9,8 @@ setup() {
   # shellcheck source=/dev/null
   source "${REPO_ROOT}/scripts/lib/jvm.sh"
   JSON="${TEST_TMP}/ProjectZomboid64.json"
+  JMX_JAR="${TEST_TMP}/jmx.jar"
+  : >"${JMX_JAR}"
   cat >"${JSON}" <<'EOF'
 {
   "mainClass": "zombie/network/GameServer",
@@ -74,4 +76,38 @@ teardown() {
 @test "jvm_set_heap fails on a missing file" {
   run jvm_set_heap "${TEST_TMP}/absent.json" "4g"
   [ "$status" -eq 1 ]
+}
+
+@test "jvm_set_jmx_agent adds the agent argument" {
+  jvm_set_jmx_agent "${JSON}" "${JMX_JAR}" "9404"
+  run jq -r '.vmArgs | map(select(startswith("-javaagent"))) | length' "${JSON}"
+  [ "$output" = "1" ]
+  run jq -r '.vmArgs | map(select(startswith("-javaagent"))) | join("")' "${JSON}"
+  [[ "$output" == *"${JMX_JAR}=9404"* ]]
+}
+
+@test "jvm_set_jmx_agent is idempotent" {
+  jvm_set_jmx_agent "${JSON}" "${JMX_JAR}" "9404"
+  jvm_set_jmx_agent "${JSON}" "${JMX_JAR}" "9404"
+  run jq -r '.vmArgs | map(select(startswith("-javaagent"))) | length' "${JSON}"
+  [ "$output" = "1" ]
+}
+
+@test "jvm_set_jmx_agent keeps the heap flags" {
+  jvm_set_heap "${JSON}" "4g"
+  jvm_set_jmx_agent "${JSON}" "${JMX_JAR}" "9404"
+  run jq -r '.vmArgs | map(select(startswith("-Xmx"))) | join("")' "${JSON}"
+  [ "$output" = "-Xmx4g" ]
+}
+
+@test "jvm_set_heap does not remove an existing agent" {
+  jvm_set_jmx_agent "${JSON}" "${JMX_JAR}" "9404"
+  jvm_set_heap "${JSON}" "4g"
+  run jq -r '.vmArgs | map(select(startswith("-javaagent"))) | length' "${JSON}"
+  [ "$output" = "1" ]
+}
+
+@test "jvm_set_jmx_agent fails when the jar is not in the image" {
+  run jvm_set_jmx_agent "${JSON}" "${TEST_TMP}/absent.jar" "9404"
+  [ "$status" -ne 0 ]
 }

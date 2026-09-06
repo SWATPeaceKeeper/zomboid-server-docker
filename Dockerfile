@@ -17,6 +17,24 @@ ENV CGO_ENABLED=0
 RUN go install "github.com/gorcon/rcon-cli/cmd/gorcon@${RCON_VERSION}" \
   && install -m 0755 /go/bin/gorcon /usr/local/bin/rcon
 
+# ---- prometheus jmx agent ----------------------------------------------------
+# Baked in so that turning metrics on needs no network access at runtime. It is
+# only ever loaded when PZ_JMX_METRICS=true.
+FROM steamcmd/steamcmd:ubuntu-24@sha256:2fbec2969d6caf1d203b62a365c0198c17c7eb9859b39f715c8acabfe917c182 AS jmx
+
+ARG JMX_VERSION=1.6.0
+ARG JMX_SHA256=a95983fd96e865d2bcdf911cc500e7c82808c27ab9fd226bf96732b6c3d8c46e
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# hadolint ignore=DL3008
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates curl \
+  && rm -rf /var/lib/apt/lists/* \
+  && curl -fsSL -o /tmp/jmx.jar \
+  "https://github.com/prometheus/jmx_exporter/releases/download/${JMX_VERSION}/jmx_prometheus_javaagent-${JMX_VERSION}.jar" \
+  && echo "${JMX_SHA256}  /tmp/jmx.jar" | sha256sum -c -
+
 # ---- runtime -----------------------------------------------------------------
 FROM steamcmd/steamcmd:ubuntu-24@sha256:2fbec2969d6caf1d203b62a365c0198c17c7eb9859b39f715c8acabfe917c182
 
@@ -48,6 +66,9 @@ RUN userdel -r ubuntu \
 COPY --from=rcon --chown=root:root /usr/local/bin/rcon /usr/local/bin/rcon
 COPY --chown=pz:pz scripts/ /opt/pz/scripts/
 
+COPY --from=jmx --chown=root:root /tmp/jmx.jar /opt/pz/jmx_prometheus_javaagent.jar
+COPY --chown=pz:pz jmx-config.yaml /opt/pz/jmx-config.yaml
+
 RUN chmod 0755 /opt/pz/scripts/entrypoint.sh /opt/pz/scripts/healthcheck.sh
 
 ENV PZ_SERVER_DIR=/data/server \
@@ -64,6 +85,8 @@ USER 1000:1000
 WORKDIR /data/server
 
 EXPOSE 16261/udp 16262/udp
+# Only listens when PZ_JMX_METRICS=true.
+EXPOSE 9404
 
 # start_period is generous because a first boot downloads the server and
 # generates a world before it can answer anything.
