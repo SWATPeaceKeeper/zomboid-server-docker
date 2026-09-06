@@ -39,7 +39,12 @@ if docker ps --all --format '{{.Names}}' | grep -qx 'pz-server'; then
 fi
 
 echo "==> Bringing the stack up"
-docker compose up -d
+# --build is not optional here. The services carry both `image:` and `build:`,
+# and Compose's default pull policy prefers the published image over the local
+# source, so without it this test silently verifies the last release instead of
+# the code under test. That is exactly how a change to the backup sidecar passed
+# review while its container ran month-old code.
+docker compose up -d --build
 
 echo "==> Waiting up to ${READY_TIMEOUT}s for pz-server to become healthy"
 deadline=$(($(date +%s) + READY_TIMEOUT))

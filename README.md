@@ -148,10 +148,12 @@ docker compose up -d
 docker compose logs -f pz-server
 ```
 
-The bundled `docker-compose.yml` has a `build:` section, so `docker compose up -d`
-builds the images locally the first time. Note that it will **not** rebuild after
-you edit something — Compose reuses the existing tag. Use `docker compose up -d
---build` when you change the scripts or a Dockerfile.
+**If you intend to change anything, always use `docker compose up -d --build`.**
+
+The bundled `docker-compose.yml` carries both an `image:` and a `build:` section.
+Compose's default pull policy prefers the published image over your local source,
+so a plain `docker compose up -d` runs the last release and quietly ignores every
+edit you made. `--build` is what makes it build what you actually have.
 
 ## What the first start does
 
