@@ -128,9 +128,29 @@ jvm_metrics="$(docker compose exec -T pz-exporter \
   wget -qO- http://pz-server:9404/metrics 2>/dev/null || true)"
 if ! printf '%s' "${jvm_metrics}" | grep -q '^jvm_memory_bytes_used'; then
   echo "!! No jvm_ metrics on pz-server:9404 although PZ_JMX_METRICS is true." >&2
-  echo "!! The agent did not load, or the server did not start with it." >&2
+
+  echo "-- the agent argument in ProjectZomboid64.json --" >&2
   docker compose exec -T pz-server \
     sh -c 'grep -o "javaagent[^\"]*" /data/server/ProjectZomboid64.json' >&2 || true
+
+  # Distinguishes "the JVM never loaded the agent" from "it loaded but is not
+  # reachable from another container", which need opposite fixes.
+  echo "-- the java command line as actually started --" >&2
+  docker compose exec -T pz-server \
+    sh -c 'cat /proc/$(pgrep -f ProjectZomboid | head -1)/cmdline | tr "\0" " "' >&2 || true
+
+  echo "-- listening sockets inside pz-server --" >&2
+  docker compose exec -T pz-server ss -lntp >&2 || true
+
+  # The server image has neither curl nor wget, so this uses bash's own TCP
+  # support rather than adding a package just to debug.
+  echo "-- is anything listening on 9404 inside pz-server? --" >&2
+  docker compose exec -T pz-server \
+    bash -c 'exec 3<>/dev/tcp/127.0.0.1/9404 && echo "port 9404 open" || echo "port 9404 closed"' >&2 || true
+
+  echo "-- anything the server said about the agent --" >&2
+  docker compose logs pz-server 2>&1 | grep -iE 'agent|jmx|prometheus' | head -20 >&2 || true
+
   exit 1
 fi
 echo "==> JMX agent is serving jvm_ metrics"
