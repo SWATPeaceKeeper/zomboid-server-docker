@@ -200,6 +200,25 @@ them before building on them.
    first implementation task captures it from a running server in CI and commits
    it as a test fixture.
 
+### Verdict, 2026-09-06
+
+Both were checked against a Build 42 server in CI run
+[34033815919](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/runs/34033815919).
+
+1. **Confirmed.** The manifest contains `"buildid"  "24909836"`. `pz_server_info`
+   stays in the design.
+2. **Partly confirmed.** An empty server prints exactly `Players connected (0):`
+   — a header carrying the count in brackets, as assumed. The shape of the *name*
+   lines could not be observed, because CI cannot make a player join. It is taken
+   from `beyenilmez/pz-info-api`, an independent project that parses the same
+   command against real servers, which documents and handles `- name` lines. The
+   fixture is labelled as reconstructed rather than captured in
+   `exporter/testdata/README.md`, so a future failure is traced to the right
+   place.
+
+The same capture also settled a question left open in the README: `players` and
+`quit` are confirmed present in the server's own `help` output.
+
 ## 10. Out of scope
 
 Alerting rules, per-player playtime, zombie or world statistics (the game does

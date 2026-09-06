@@ -1,0 +1,3 @@
+Players connected (2):
+- player1
+- player2

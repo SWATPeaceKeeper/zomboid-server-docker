@@ -1,0 +1,40 @@
+"AppState"
+{
+	"appid"		"380870"
+	"Universe"		"1"
+	"name"		"Project Zomboid Dedicated Server"
+	"StateFlags"		"4"
+	"installdir"		"Project Zomboid Dedicated Server"
+	"LastUpdated"		"1788698687"
+	"LastPlayed"		"0"
+	"SizeOnDisk"		"7212532083"
+	"StagingSize"		"0"
+	"buildid"		"24909836"
+	"LastOwner"		"0"
+	"DownloadType"		"1"
+	"UpdateResult"		"0"
+	"BytesToDownload"		"1997665008"
+	"BytesDownloaded"		"1997665008"
+	"BytesToStage"		"7212532083"
+	"BytesStaged"		"7212532083"
+	"TargetBuildID"		"24909836"
+	"AutoUpdateBehavior"		"0"
+	"AllowOtherDownloadsWhileRunning"		"0"
+	"ScheduledAutoUpdate"		"0"
+	"InstalledDepots"
+	{
+		"1006"
+		{
+			"manifest"		"6403079453713498174"
+			"size"		"107911652"
+		}
+		"380871"
+		{
+			"manifest"		"8198713088050651526"
+			"size"		"6886641123"
+		}
+		"380873"
+		{
+			"manifest"		"4894029153115054997"
+			"size"		"217979308"
+		}

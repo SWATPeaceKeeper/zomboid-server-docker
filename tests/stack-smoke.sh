@@ -59,26 +59,6 @@ while true; do
 done
 echo "==> Healthy"
 
-# TEMPORARY: captures the real output the metrics parsers will be written
-# against. Removed again in the same task that adds the fixtures.
-echo "==> CAPTURE: rcon players (no players connected)"
-echo "----8<---- players_empty ----8<----"
-docker compose exec -T pz-server \
-  rcon -a "127.0.0.1:27015" -p "${PZ_RCON_PASSWORD}" players || true
-echo "----8<---- end ----8<----"
-
-echo "==> CAPTURE: steam app manifest"
-echo "----8<---- appmanifest ----8<----"
-docker compose exec -T pz-server \
-  sh -c 'cat /data/server/steamapps/appmanifest_380870.acf 2>&1 | head -40' || true
-echo "----8<---- end ----8<----"
-
-echo "==> CAPTURE: rcon help"
-echo "----8<---- rconhelp ----8<----"
-docker compose exec -T pz-server \
-  rcon -a "127.0.0.1:27015" -p "${PZ_RCON_PASSWORD}" help 2>&1 | head -40 || true
-echo "----8<---- end ----8<----"
-
 echo "==> Taking a backup against the running server"
 backup_output="$(docker compose exec -T pz-backup backup-now 2>&1)"
 printf '%s\n' "${backup_output}"
