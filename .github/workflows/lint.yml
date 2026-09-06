@@ -5,6 +5,8 @@ name: Lint
   push:
     branches: [main]
   pull_request:
+  # So it can be run against a branch before opening a pull request.
+  workflow_dispatch:
 
 permissions:
   contents: read
