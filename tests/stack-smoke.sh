@@ -83,6 +83,37 @@ if [ "${archive_count//[[:space:]]/}" -lt 1 ]; then
   exit 1
 fi
 
+echo "==> Checking the exporter answers against the live server"
+metrics="$(docker compose exec -T pz-exporter \
+  wget -qO- http://127.0.0.1:9401/metrics)"
+
+if ! printf '%s' "${metrics}" | grep -qE '^pz_up 1$'; then
+  echo "!! pz_up is not 1; the exporter cannot reach the server over RCON" >&2
+  printf '%s\n' "${metrics}" | grep -E '^pz_' >&2
+  exit 1
+fi
+
+if ! printf '%s' "${metrics}" | grep -qE '^pz_players_online 0$'; then
+  echo "!! pz_players_online missing or not zero on an empty server" >&2
+  printf '%s\n' "${metrics}" | grep -E '^pz_' >&2
+  exit 1
+fi
+
+# The valuable one: it proves the sidecar and the exporter agree about a backup
+# that really happened moments ago in this same run.
+if ! printf '%s' "${metrics}" | grep -q '^pz_backup_last_success_timestamp_seconds '; then
+  echo "!! the exporter did not see the backup taken moments ago" >&2
+  printf '%s\n' "${metrics}" | grep -E '^pz_' >&2
+  exit 1
+fi
+
+if ! printf '%s' "${metrics}" | grep -q '^pz_server_info{build_id='; then
+  echo "!! the exporter could not read the steam build id" >&2
+  printf '%s\n' "${metrics}" | grep -E '^pz_' >&2
+  exit 1
+fi
+echo "==> Exporter reports pz_up 1, the backup and the build id"
+
 echo "==> Stopping the stack and checking the shutdown is clean"
 docker compose stop
 exit_code="$(docker inspect -f '{{.State.ExitCode}}' pz-server)"
