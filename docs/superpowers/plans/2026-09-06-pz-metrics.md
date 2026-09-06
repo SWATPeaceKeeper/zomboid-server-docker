@@ -1,5 +1,37 @@
 # Project Zomboid Metrics Implementation Plan
 
+> **Status: executed and released.** All eleven tasks are done; the result shipped
+> as [v1.2.0](https://github.com/SWATPeaceKeeper/zomboid-server-docker/releases/tag/v1.2.0)
+> on 2026-09-06. The boxes below are ticked because every step was handled, but
+> several were handled differently than written:
+>
+> - **Task 1, populated fixture.** CI cannot make a player join, so the shape of
+>   the name lines could not be captured. It is reconstructed from an independent
+>   project that parses the same command, and labelled as such in
+>   `exporter/testdata/README.md`. The empty case and the manifest are real
+>   captures, and both spec assumptions were confirmed.
+> - **Task 3, rcontest.** The API sketched here does not exist: `Request()`
+>   returns a `*rcon.Packet`, and a reply is written with
+>   `rcon.NewPacket(...).WriteTo(c.Conn())`. The library was read before the test
+>   was written.
+> - **Task 7, base image.** Alpine was replaced by `scratch` after Trivy blocked
+>   the release on two HIGH advisories in an OpenSSL the exporter never calls.
+>   16 MB, zero findings, nothing to patch. The zone database is embedded via
+>   `time/tzdata` as a consequence.
+> - **Task 8, how metrics are fetched.** From `pz-backup` rather than from inside
+>   the exporter, which has no shell on `scratch`. That also proves the exporter
+>   is reachable over the network, the way Prometheus reaches it.
+> - **Task 8, `--build`.** Discovered mid-execution: with both `image:` and
+>   `build:` set, `docker compose up -d` pulls the published image, so the stack
+>   test had been verifying the last release instead of the code. Forced to build.
+> - **Task 9, metric name.** `jvm_memory_used_bytes`, not `jvm_memory_bytes_used`;
+>   the Prometheus Java client renamed it at 1.0. The agent worked all along.
+>   The fallback of downloading the jar at runtime was measured against and left
+>   unused: 530 MB to 550 MB.
+> - **Task 10, dashboard.** Written by hand rather than exported from Grafana,
+>   then verified by importing it into a real Grafana against a real Prometheus.
+>   That caught a `{{pool}}` legend referring to a label that does not exist.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Expose player activity, backup health, server reachability and — optionally — JVM metrics as Prometheus metrics, so a quiet server or a silently failing backup becomes visible before anyone needs either.
@@ -60,7 +92,7 @@ production code — its deliverable is fixtures and a decision.
 - Consumes: nothing
 - Produces: three fixture files. Every parser in Tasks 3 and 5 is written against these, not against any format assumed in this plan.
 
-- [ ] **Step 1: Add a capture step to the stack smoke test**
+- [x] **Step 1: Add a capture step to the stack smoke test**
 
 In `tests/stack-smoke.sh`, directly after the `==> Healthy` line, insert:
 
@@ -78,7 +110,7 @@ docker compose exec -T pz-server \
 echo "----8<---- end ----8<----"
 ```
 
-- [ ] **Step 2: Push and let CI run it**
+- [x] **Step 2: Push and let CI run it**
 
 ```bash
 git add tests/stack-smoke.sh
@@ -87,14 +119,14 @@ git push
 gh run watch
 ```
 
-- [ ] **Step 3: Read the captured output out of the CI log**
+- [x] **Step 3: Read the captured output out of the CI log**
 
 ```bash
 gh run view --job smoke --log | sed -n '/----8<---- players_empty/,/----8<---- end/p'
 gh run view --job smoke --log | sed -n '/----8<---- appmanifest/,/----8<---- end/p'
 ```
 
-- [ ] **Step 4: Save the captures as fixtures**
+- [x] **Step 4: Save the captures as fixtures**
 
 Write the `players` output verbatim to `exporter/testdata/players_empty.txt` and
 the manifest to `exporter/testdata/appmanifest_380870.acf`, stripping only the CI
@@ -106,14 +138,14 @@ hint of that shape (for example it prints only a bare count), note this in the
 file as a comment and treat the populated case as unverified until someone joins
 a real server.
 
-- [ ] **Step 5: Record the verdict on both assumptions**
+- [x] **Step 5: Record the verdict on both assumptions**
 
 Append to `docs/superpowers/specs/2026-09-06-pz-metrics-design.md` under §9, one
 line per assumption, stating what was found. If the manifest has no `buildid`
 key, write that down and **drop `pz_server_info` from the plan** — Task 5 is then
 skipped entirely and nothing else changes.
 
-- [ ] **Step 6: Remove the capture step and commit**
+- [x] **Step 6: Remove the capture step and commit**
 
 Revert the change to `tests/stack-smoke.sh` from Step 1; it has served its
 purpose and would otherwise print noise on every run.
@@ -138,7 +170,7 @@ exists, not what is missing. The sidecar records each outcome instead.
 - Consumes: `backup_create`, `backup_rotate`, `backup_notify` from `scripts/backup/lib/backup.sh`
 - Produces: `${BACKUP_DIR}/.status`, a file of `key=value` lines with keys `timestamp` (Unix seconds), `status` (`ok`, `failed` or `skipped`), `archive` (path, empty unless `ok`) and `bytes` (integer, `0` unless `ok`). Written after every run, including failures.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `tests/unit/backup.bats`:
 
@@ -187,12 +219,12 @@ Append to `tests/unit/backup.bats`:
 }
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `./tests/run-unit.sh`
 Expected: the four new tests fail; `.status` does not exist yet.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `scripts/backup/backup-now.sh`, add above `main()`:
 
@@ -243,12 +275,12 @@ main() {
 `backup_rotate` already only matches `pz-*`, so `.status` is untouched by it —
 the fourth test above locks that in.
 
-- [ ] **Step 4: Run the tests again**
+- [x] **Step 4: Run the tests again**
 
 Run: `./tests/run-unit.sh`
 Expected: PASS, all tests.
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 shellcheck scripts/backup/backup-now.sh
@@ -274,7 +306,7 @@ git commit -m "feat: record each backup outcome in a status file"
   - `func NewClient(addr, password string, timeout time.Duration) *Client`
   - `func (c *Client) Query() (Snapshot, error)` — dials RCON, runs `players`, parses the reply.
 
-- [ ] **Step 1: Create the module**
+- [x] **Step 1: Create the module**
 
 ```bash
 mkdir -p exporter/internal/players
@@ -291,7 +323,7 @@ Append to `.gitignore`:
 /exporter/exporter
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `exporter/internal/players/players_test.go`:
 
@@ -370,12 +402,12 @@ func TestParseFallsBackToCountingNames(t *testing.T) {
 }
 ```
 
-- [ ] **Step 3: Run them and watch them fail**
+- [x] **Step 3: Run them and watch them fail**
 
 Run: `cd exporter && go test ./... ; cd ..`
 Expected: FAIL — `undefined: Parse`.
 
-- [ ] **Step 4: Implement the parser**
+- [x] **Step 4: Implement the parser**
 
 `exporter/internal/players/players.go`:
 
@@ -480,14 +512,14 @@ func (c *Client) Query() (Snapshot, error) {
 }
 ```
 
-- [ ] **Step 5: Run the tests again**
+- [x] **Step 5: Run the tests again**
 
 Run: `cd exporter && go test ./... ; cd ..`
 Expected: PASS. If `TestParseEmptyServer` or `TestParsePopulatedServer` fails,
 **the fixture is right and this parser is wrong** — adjust `Parse`, never the
 fixture.
 
-- [ ] **Step 6: Add a test against a fake RCON server**
+- [x] **Step 6: Add a test against a fake RCON server**
 
 Append to `players_test.go`:
 
@@ -532,7 +564,7 @@ Expected: PASS. If the `rcontest` API differs from the calls above, adapt these
 tests to the version in `go.sum` — check with
 `go doc github.com/gorcon/rcon/rcontest`.
 
-- [ ] **Step 7: Wire Go into CI**
+- [x] **Step 7: Wire Go into CI**
 
 In `.github/workflows/lint.yml`, add before the yamllint step:
 
@@ -557,7 +589,7 @@ In `.github/workflows/test.yml`, add to the `unit` job after the bats step:
 Using the pinned builder image rather than `actions/setup-go` keeps the toolchain
 identical to the one the release build uses.
 
-- [ ] **Step 8: Verify and commit**
+- [x] **Step 8: Verify and commit**
 
 ```bash
 docker run --rm -v "${PWD}/exporter:/src" -w /src \
@@ -583,7 +615,7 @@ git commit -m "feat: add go module and the rcon players parser"
   - `func ReadStatus(dir string) (Status, error)` — reads `<dir>/.status`
   - `func CountArchives(dir string) (int, error)` — counts entries matching `pz-*`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `exporter/internal/backups/backups_test.go`:
 
@@ -680,12 +712,12 @@ func TestCountArchives(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `cd exporter && go test ./internal/backups/ ; cd ..`
 Expected: FAIL — `undefined: ParseStatus`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `exporter/internal/backups/backups.go`:
 
@@ -775,12 +807,12 @@ func CountArchives(dir string) (int, error) {
 }
 ```
 
-- [ ] **Step 4: Run the tests again**
+- [x] **Step 4: Run the tests again**
 
 Run: `cd exporter && go test ./... ; cd ..`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add exporter/internal/backups/
@@ -803,7 +835,7 @@ it.
 - Produces: `func BuildID(serverDir string) (string, error)` — reads
   `<serverDir>/steamapps/appmanifest_380870.acf` and returns the `buildid` value.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `exporter/internal/manifest/manifest_test.go`:
 
@@ -867,12 +899,12 @@ func TestBuildIDMissingKey(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `cd exporter && go test ./internal/manifest/ ; cd ..`
 Expected: FAIL — `undefined: BuildID`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `exporter/internal/manifest/manifest.go`:
 
@@ -907,12 +939,12 @@ func BuildID(serverDir string) (string, error) {
 }
 ```
 
-- [ ] **Step 4: Run the tests again**
+- [x] **Step 4: Run the tests again**
 
 Run: `cd exporter && go test ./... ; cd ..`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add exporter/internal/manifest/
@@ -936,7 +968,7 @@ git commit -m "feat: read the steam build id from the app manifest"
   - `func New(p PlayerSource, b BackupSource, v VersionSource, o Options) *Collector`
   - `Collector` implements `prometheus.Collector`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `exporter/internal/collector/collector_test.go`:
 
@@ -1090,12 +1122,12 @@ func TestCollectorPassesPedanticRegistration(t *testing.T) {
 }
 ```
 
-- [ ] **Step 2: Run them and watch them fail**
+- [x] **Step 2: Run them and watch them fail**
 
 Run: `cd exporter && go test ./internal/collector/ ; cd ..`
 Expected: FAIL — `undefined: New`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `exporter/internal/collector/collector.go`:
 
@@ -1257,12 +1289,12 @@ func (c *Collector) collectVersion(ch chan<- prometheus.Metric) {
 }
 ```
 
-- [ ] **Step 4: Run the tests again**
+- [x] **Step 4: Run the tests again**
 
 Run: `cd exporter && go test ./... ; cd ..`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add exporter/internal/collector/
@@ -1281,7 +1313,7 @@ git commit -m "feat: add the prometheus collector"
 - Consumes: everything from Tasks 3 to 6
 - Produces: a container serving `/metrics` on `:9401`, and a `pz-exporter` Compose service.
 
-- [ ] **Step 1: Write main.go**
+- [x] **Step 1: Write main.go**
 
 ```go
 // Command exporter serves Project Zomboid server and backup metrics for
@@ -1377,7 +1409,7 @@ Note for the implementer: the root handler checks the path explicitly because
 Go's default mux routes everything unmatched to `/`, and a metrics endpoint that
 answers 200 for `/anything` makes broken scrape configurations look healthy.
 
-- [ ] **Step 2: Write the Dockerfile**
+- [x] **Step 2: Write the Dockerfile**
 
 `Dockerfile.exporter`:
 
@@ -1410,7 +1442,7 @@ EXPOSE 9401
 ENTRYPOINT ["/usr/local/bin/pz-exporter"]
 ```
 
-- [ ] **Step 3: Build it and measure the size**
+- [x] **Step 3: Build it and measure the size**
 
 ```bash
 docker build -f Dockerfile.exporter -t pz-exporter:dev .
@@ -1419,7 +1451,7 @@ docker images pz-exporter:dev --format '{{.Size}}'
 
 Record the measured size in the commit message. Do not predict it beforehand.
 
-- [ ] **Step 4: Prove it serves metrics without a server to talk to**
+- [x] **Step 4: Prove it serves metrics without a server to talk to**
 
 ```bash
 docker run --rm -d --name pz-exporter-check -p 9401:9401 \
@@ -1432,7 +1464,7 @@ docker rm -f pz-exporter-check
 Expected: `pz_up 0` and `pz_scrape_errors_total{source="rcon"} 1`. This is the
 important behaviour: with nothing to talk to, the exporter still answers.
 
-- [ ] **Step 5: Add the Compose service**
+- [x] **Step 5: Add the Compose service**
 
 Insert into `docker-compose.yml` after `pz-backup`:
 
@@ -1464,7 +1496,7 @@ Insert into `docker-compose.yml` after `pz-backup`:
 The port is deliberately not published: Prometheus reaches it over the network,
 and anything else does not need to.
 
-- [ ] **Step 6: Validate and commit**
+- [x] **Step 6: Validate and commit**
 
 ```bash
 PZ_ADMIN_PASSWORD=x PZ_RCON_PASSWORD=y docker compose config --quiet
@@ -1485,7 +1517,7 @@ git commit -m "feat: serve the metrics from a container"
 - Consumes: the `pz-exporter` service from Task 7
 - Produces: CI coverage of the exporter against a live server.
 
-- [ ] **Step 1: Add the assertion**
+- [x] **Step 1: Add the assertion**
 
 In `tests/stack-smoke.sh`, after the archive check and before the stop:
 
@@ -1516,7 +1548,7 @@ echo "==> Exporter reports pz_up 1 and sees the backup"
 The third assertion is the valuable one: it proves the sidecar and the exporter
 agree about a backup that actually happened in this run.
 
-- [ ] **Step 2: Verify locally as far as is safe**
+- [x] **Step 2: Verify locally as far as is safe**
 
 ```bash
 shellcheck tests/stack-smoke.sh
@@ -1525,7 +1557,7 @@ shfmt -i 2 -d tests/stack-smoke.sh
 
 Do **not** run the stack on the development laptop. CI is the proof.
 
-- [ ] **Step 3: Commit and watch CI**
+- [x] **Step 3: Commit and watch CI**
 
 ```bash
 git add tests/stack-smoke.sh
@@ -1548,7 +1580,7 @@ Expected: the `smoke` job prints `==> Exporter reports pz_up 1 and sees the back
 - Consumes: `jvm_set_heap` from `scripts/lib/jvm.sh`
 - Produces: `jvm_set_jmx_agent <json_file> <jar_path> <port>` — appends the Java agent argument to `vmArgs`, idempotently. Called only when `PZ_JMX_METRICS=true`.
 
-- [ ] **Step 1: Measure the cost before committing to it**
+- [x] **Step 1: Measure the cost before committing to it**
 
 ```bash
 docker images pz-server:dev --format '{{.Size}}'   # before
@@ -1559,7 +1591,7 @@ in the commit message. If the increase is unacceptable, stop and switch to
 downloading the jar into `/data/server` on first enable instead — the design doc
 notes this fallback.
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Append to `tests/unit/jvm.bats`:
 
@@ -1594,12 +1626,12 @@ Append to `tests/unit/jvm.bats`:
 }
 ```
 
-- [ ] **Step 3: Run them and watch them fail**
+- [x] **Step 3: Run them and watch them fail**
 
 Run: `./tests/run-unit.sh`
 Expected: FAIL — `jvm_set_jmx_agent: command not found`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 Append to `scripts/lib/jvm.sh`:
 
@@ -1643,7 +1675,7 @@ In `scripts/entrypoint.sh`, in `configure_phase`, after the `jvm_set_heap` call:
   fi
 ```
 
-- [ ] **Step 5: Add the agent and its config to the server image**
+- [x] **Step 5: Add the agent and its config to the server image**
 
 In `Dockerfile`, add a stage before the runtime stage:
 
@@ -1684,7 +1716,7 @@ lowercaseOutputName: true
 lowercaseOutputLabelNames: true
 ```
 
-- [ ] **Step 6: Verify the image builds and the agent is present**
+- [x] **Step 6: Verify the image builds and the agent is present**
 
 ```bash
 docker build -t pz-server:dev .
@@ -1694,7 +1726,7 @@ docker images pz-server:dev --format '{{.Size}}'   # after
 ./tests/run-unit.sh
 ```
 
-- [ ] **Step 7: Lint and commit**
+- [x] **Step 7: Lint and commit**
 
 ```bash
 shellcheck scripts/lib/jvm.sh scripts/entrypoint.sh
@@ -1718,7 +1750,7 @@ Image size before: <measured>. After: <measured>."
 - Consumes: the exporter from Task 7 and the optional JMX port from Task 9
 - Produces: an opt-in overlay and an importable dashboard.
 
-- [ ] **Step 1: Write the overlay**
+- [x] **Step 1: Write the overlay**
 
 `docker-compose.monitoring.yml`:
 
@@ -1759,7 +1791,7 @@ scrape_configs:
       - targets: ["pz-server:9404"]
 ```
 
-- [ ] **Step 2: Build the dashboard**
+- [x] **Step 2: Build the dashboard**
 
 Create `grafana/pz-dashboard.json` with these panels, all using a
 `${DS_PROMETHEUS}` datasource variable so it imports anywhere:
@@ -1781,13 +1813,13 @@ dashboard JSON produces files that do not import cleanly.
 No CPU or memory panels: cAdvisor already provides those, and a second source for
 the same number is a source of disagreement.
 
-- [ ] **Step 3: Verify the dashboard imports**
+- [x] **Step 3: Verify the dashboard imports**
 
 Import `grafana/pz-dashboard.json` into a Grafana instance pointed at a
 Prometheus that scrapes the exporter. Every panel must render — with no data is
 acceptable, with an error is not.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 yamllint -c .yamllint docker-compose.monitoring.yml
@@ -1803,7 +1835,7 @@ git commit -m "feat: add monitoring overlay and grafana dashboard"
 **Files:**
 - Modify: `README.md`, `docs/configuration.md`, `CHANGELOG.md`, `.github/workflows/release.yml`
 
-- [ ] **Step 1: Publish the exporter image**
+- [x] **Step 1: Publish the exporter image**
 
 In `.github/workflows/release.yml`, add to the `publish` matrix:
 
@@ -1812,14 +1844,14 @@ In `.github/workflows/release.yml`, add to the `publish` matrix:
             dockerfile: Dockerfile.exporter
 ```
 
-- [ ] **Step 2: Document the variables**
+- [x] **Step 2: Document the variables**
 
 Add a "Metrics exporter" table to `docs/configuration.md` covering `RCON_HOST`,
 `RCON_PORT`, `RCON_PASSWORD`, `RCON_TIMEOUT`, `LISTEN_ADDR`, `PZ_SERVER_DIR`,
 `BACKUP_DIR` and `PZ_EXPORT_PLAYER_NAMES`, and add `PZ_JMX_METRICS` and
 `PZ_JMX_PORT` to the server container table.
 
-- [ ] **Step 3: Add a Metrics section to the README**
+- [x] **Step 3: Add a Metrics section to the README**
 
 Place it after "Backups". Cover: what is exported and what deliberately is not
 (cAdvisor already has container CPU and memory), the metric table from spec §4,
@@ -1827,19 +1859,19 @@ how to scrape it, how to turn on JVM metrics and what that costs, and how to
 import the dashboard. Include the one-line warning that `pz_player_info` grows
 series on a busy public server and how to turn it off.
 
-- [ ] **Step 4: Update the changelog**
+- [x] **Step 4: Update the changelog**
 
 Add an `## [Unreleased]` entry under `### Added` describing the exporter, the
 backup status file, the optional JVM metrics and the dashboard. Note under
 `### Changed` that the backup sidecar now writes `${BACKUP_DIR}/.status`.
 
-- [ ] **Step 5: Verify every documented command**
+- [x] **Step 5: Verify every documented command**
 
 Run each command block in the new README section against the running stack in
 CI or on a host with enough memory. A command that does not work as written is a
 documentation bug and is fixed before committing.
 
-- [ ] **Step 6: Commit, then cut the release**
+- [x] **Step 6: Commit, then cut the release**
 
 ```bash
 git add README.md docs/configuration.md CHANGELOG.md .github/workflows/release.yml

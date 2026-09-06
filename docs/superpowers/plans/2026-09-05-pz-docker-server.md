@@ -1,5 +1,22 @@
 # Project Zomboid Dedicated Server Image — Implementation Plan
 
+> **Status: executed and released.** All twelve tasks are done; the result shipped
+> as [v1.0.0](https://github.com/SWATPeaceKeeper/zomboid-server-docker/releases/tag/v1.0.0)
+> on 2026-09-05 and was corrected by v1.1.0 and v1.1.1 on 2026-09-06. The boxes
+> below are ticked because every step was handled, but four of them were handled
+> differently than written, and the reasons are worth keeping:
+>
+> - **Task 1, shfmt hook.** The planned python wrapper installs itself through
+>   `uv pip`, which a local shim blocks. It runs from the official image instead.
+> - **Task 1, test runner.** The stock `bats` image is busybox-based, so it lacks
+>   `jq` and its `find`, `cp` and `tar` behave differently from the Debian runtime
+>   images. `tests/Dockerfile` adds the GNU versions.
+> - **Task 2, prefix test.** The planned test passed against a deliberately broken
+>   implementation, because the fixture ordering hid the bug. A second test was
+>   added that fails without the fix.
+> - **Sizes.** The image is 519 MB, not the ~170 MB estimated here, and a Build 42
+>   download is roughly 7 GB rather than 3 GB. Both are corrected in the spec.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a container image and Compose stack that runs a Project Zomboid dedicated server with runtime-switchable game branch, environment-driven configuration, scheduled world backups, and a CI pipeline that actually starts the server before publishing.
@@ -68,7 +85,7 @@ Set up the linting and test harness first, so every later task has something to 
 - Consumes: nothing
 - Produces: `tests/run-unit.sh` — runs every `tests/unit/*.bats` file inside `bats/bats:1.14.0`, mounting the repository at `/code`. Bats files load helpers with `load '../helpers/load'`. `tests/helpers/load.bash` exports `REPO_ROOT` (absolute path to the repository inside the container) and defines `setup_tmpdir`, which creates `$TEST_TMP` and registers cleanup.
 
-- [ ] **Step 1: Create the license and ignore files**
+- [x] **Step 1: Create the license and ignore files**
 
 ```bash
 curl -fsSL -o LICENSE https://www.gnu.org/licenses/gpl-3.0.txt
@@ -84,7 +101,7 @@ curl -fsSL -o LICENSE https://www.gnu.org/licenses/gpl-3.0.txt
 *.tar.zst
 ```
 
-- [ ] **Step 2: Create the bats runner**
+- [x] **Step 2: Create the bats runner**
 
 `tests/run-unit.sh`:
 
@@ -127,7 +144,7 @@ teardown_tmpdir() {
 }
 ```
 
-- [ ] **Step 3: Write a harness test that proves the runner works**
+- [x] **Step 3: Write a harness test that proves the runner works**
 
 `tests/unit/harness.bats`:
 
@@ -156,12 +173,12 @@ teardown() {
 }
 ```
 
-- [ ] **Step 4: Run the harness tests and verify they pass**
+- [x] **Step 4: Run the harness tests and verify they pass**
 
 Run: `chmod +x tests/run-unit.sh && ./tests/run-unit.sh`
 Expected: `2 tests, 0 failures`
 
-- [ ] **Step 5: Create the lint configuration**
+- [x] **Step 5: Create the lint configuration**
 
 `.yamllint`:
 
@@ -208,7 +225,7 @@ repos:
         args: ["-c", ".yamllint"]
 ```
 
-- [ ] **Step 6: Install the hooks and verify the whole tree is clean**
+- [x] **Step 6: Install the hooks and verify the whole tree is clean**
 
 Run:
 ```bash
@@ -218,7 +235,7 @@ prek run --all-files
 ```
 Expected: every hook passes. If a `rev` above no longer exists, `prek auto-update` corrects it — commit the corrected file.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add LICENSE .gitignore .pre-commit-config.yaml .yamllint tests/
@@ -242,7 +259,7 @@ git commit -m "chore: add license, lint hooks and bats test harness"
   - `ini_set <file> <key> <value>` — replaces the first matching `key=` line in place, appends when absent. Preserves comments, ordering, unknown keys and the file's inode.
   - `ini_check_mod_ids <mod_ids> <branch>` — writes one warning per entry lacking a leading backslash when `branch` is `public`; never modifies anything; always returns 0.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/unit/ini.bats`:
 
@@ -350,12 +367,12 @@ teardown() {
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `./tests/run-unit.sh`
 Expected: FAIL — `scripts/lib/log.sh` and `scripts/lib/ini.sh` do not exist yet.
 
-- [ ] **Step 3: Implement the logging helper**
+- [x] **Step 3: Implement the logging helper**
 
 `scripts/lib/log.sh`:
 
@@ -376,7 +393,7 @@ log_error() {
 }
 ```
 
-- [ ] **Step 4: Implement the INI library**
+- [x] **Step 4: Implement the INI library**
 
 `scripts/lib/ini.sh`:
 
@@ -465,16 +482,16 @@ ini_check_mod_ids() {
 }
 ```
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `./tests/run-unit.sh`
 Expected: PASS — all `ini.bats` tests green.
 
-- [ ] **Step 6: Confirm the tests can actually fail**
+- [x] **Step 6: Confirm the tests can actually fail**
 
 Temporarily change `[ "${line%%=*}" = "${key}" ]` to `[[ "${line}" == "${key}"* ]]` in `ini_set`, run the suite, and confirm that "does not touch a key that only shares a prefix" fails. Revert the change.
 
-- [ ] **Step 7: Lint and commit**
+- [x] **Step 7: Lint and commit**
 
 ```bash
 shellcheck scripts/lib/log.sh scripts/lib/ini.sh
@@ -498,7 +515,7 @@ git commit -m "feat: add INI patching library with prefix-safe key matching"
   - `steam_is_installed <install_dir>` — returns 0 when `<install_dir>/start-server.sh` exists.
   - `steam_install <install_dir> <branch>` — runs `${STEAMCMD_BIN}` (default `/usr/games/steamcmd`) up to `${STEAM_RETRIES}` times (default 3) with `${STEAM_RETRY_DELAY}` seconds between attempts (default 15). Returns 0 on the first success, 1 when every attempt fails.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/unit/steam.bats`:
 
@@ -589,12 +606,12 @@ EOF
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `./tests/run-unit.sh`
 Expected: FAIL — `scripts/lib/steam.sh` does not exist.
 
-- [ ] **Step 3: Implement the library**
+- [x] **Step 3: Implement the library**
 
 `scripts/lib/steam.sh`:
 
@@ -657,12 +674,12 @@ steam_install() {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `./tests/run-unit.sh`
 Expected: PASS
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 shellcheck scripts/lib/steam.sh
@@ -683,7 +700,7 @@ git commit -m "feat: add SteamCMD install library with branch handling and retri
 - Consumes: `log_info`, `log_warn`
 - Produces: `jvm_set_heap <json_file> <size>` — rewrites `.vmArgs` in `ProjectZomboid64.json` so it contains exactly one `-Xms<size>` and one `-Xmx<size>`, preserving all other entries and all other JSON keys. Returns 1 with an error when the file does not exist.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/unit/jvm.bats`:
 
@@ -761,12 +778,12 @@ teardown() {
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `./tests/run-unit.sh`
 Expected: FAIL — `scripts/lib/jvm.sh` does not exist.
 
-- [ ] **Step 3: Implement the library**
+- [x] **Step 3: Implement the library**
 
 `scripts/lib/jvm.sh`:
 
@@ -802,12 +819,12 @@ jvm_set_heap() {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `./tests/run-unit.sh`
 Expected: PASS
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 shellcheck scripts/lib/jvm.sh
@@ -830,7 +847,7 @@ git commit -m "feat: set JVM heap in ProjectZomboid64.json"
   - `args_is_first_boot <data_dir> <server_name>` — returns 0 when `<data_dir>/db/<server_name>.db` does not exist.
   - `args_build <data_dir> <server_name> <first_boot>` — populates the global array `PZ_ARGS`. `first_boot` is the string `true` or `false`. Reads `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `NOSTEAM`, `MODFOLDERS` from the environment. Never emits `-Xms`/`-Xmx` (see Task 4). Emits `-adminusername`/`-adminpassword` only when `first_boot` is `true`, because the server writes its command line to the log in clear text on every start.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/unit/args.bats`:
 
@@ -928,12 +945,12 @@ args_lines() {
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `./tests/run-unit.sh`
 Expected: FAIL — `scripts/lib/args.sh` does not exist.
 
-- [ ] **Step 3: Implement the library**
+- [x] **Step 3: Implement the library**
 
 `scripts/lib/args.sh`:
 
@@ -982,12 +999,12 @@ args_build() {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `./tests/run-unit.sh`
 Expected: PASS
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 shellcheck scripts/lib/args.sh
@@ -1010,7 +1027,7 @@ git commit -m "feat: build server arguments, passing admin password only on firs
 (`SERVER_PASSWORD`, `RCON_PASSWORD`, `RCON_PORT`, `PUBLIC`, `PUBLIC_NAME`, `MAX_PLAYERS`,
 `GAME_PORT`, `UDP_PORT`, `MOD_IDS`, `WORKSHOP_IDS`, `SELF_MANAGED_MODS`).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/unit/entrypoint.bats`:
 
@@ -1093,12 +1110,12 @@ which case the mode bits are ignored. Guard it with
 `if [ "$(id -u)" -eq 0 ]; then skip "permission checks are meaningless as root"; fi`
 as the first line of that test.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `./tests/run-unit.sh`
 Expected: FAIL — `scripts/entrypoint.sh` does not exist.
 
-- [ ] **Step 3: Implement the entrypoint**
+- [x] **Step 3: Implement the entrypoint**
 
 `scripts/entrypoint.sh`:
 
@@ -1281,16 +1298,16 @@ main() {
 main "$@"
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `./tests/run-unit.sh`
 Expected: PASS — in particular `saved.marker` exists, proving the shutdown path completed rather than being killed.
 
-- [ ] **Step 5: Confirm the shutdown test can fail**
+- [x] **Step 5: Confirm the shutdown test can fail**
 
 Temporarily replace `printf 'quit\n' >&"${CONSOLE_FD}"` with `true`, run the suite, and confirm the SIGTERM test fails because `saved.marker` is absent. Revert.
 
-- [ ] **Step 6: Lint and commit**
+- [x] **Step 6: Lint and commit**
 
 ```bash
 shellcheck scripts/entrypoint.sh
@@ -1311,7 +1328,7 @@ git commit -m "feat: add entrypoint with FIFO-based graceful shutdown"
 - Consumes: nothing from the libraries; it must stay dependency-light because Docker runs it every few seconds.
 - Produces: exit 0 when the server accepts players. With `RCON_PASSWORD` set it runs `${RCON_BIN:-rcon} -a 127.0.0.1:${RCON_PORT} -p <password> players`. Without it, it falls back to checking that a `ProjectZomboid` process exists and that `${GAME_PORT}` is bound for UDP.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/unit/healthcheck.bats`:
 
@@ -1372,12 +1389,12 @@ EOF
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `./tests/run-unit.sh`
 Expected: FAIL — `scripts/healthcheck.sh` does not exist.
 
-- [ ] **Step 3: Implement the healthcheck**
+- [x] **Step 3: Implement the healthcheck**
 
 `scripts/healthcheck.sh`:
 
@@ -1417,12 +1434,12 @@ fi
 exit 0
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `./tests/run-unit.sh`
 Expected: PASS
 
-- [ ] **Step 5: Lint and commit**
+- [x] **Step 5: Lint and commit**
 
 ```bash
 shellcheck scripts/healthcheck.sh
@@ -1442,7 +1459,7 @@ git commit -m "feat: add RCON-based healthcheck with process fallback"
 - Consumes: everything under `scripts/`
 - Produces: image with entrypoint `/opt/pz/scripts/entrypoint.sh`, healthcheck `/opt/pz/scripts/healthcheck.sh`, running as uid/gid 1000 (`pz`), with `/data/server` and `/data/zomboid` pre-created and owned by `pz`.
 
-- [ ] **Step 1: Create `.dockerignore`**
+- [x] **Step 1: Create `.dockerignore`**
 
 ```gitignore
 .git
@@ -1454,7 +1471,7 @@ backups
 *.md
 ```
 
-- [ ] **Step 2: Write the Dockerfile**
+- [x] **Step 2: Write the Dockerfile**
 
 `Dockerfile`:
 
@@ -1533,12 +1550,12 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=900s --retries=3 \
 ENTRYPOINT ["/opt/pz/scripts/entrypoint.sh"]
 ```
 
-- [ ] **Step 3: Lint the Dockerfile**
+- [x] **Step 3: Lint the Dockerfile**
 
 Run: `hadolint Dockerfile`
 Expected: no output. If a rule fires that is not already suppressed, either fix it or add a `# hadolint ignore=<rule>` line with a justification comment — never leave a warning unaddressed.
 
-- [ ] **Step 4: Build the image and verify the user and tooling**
+- [x] **Step 4: Build the image and verify the user and tooling**
 
 ```bash
 docker build -t pz-server:dev .
@@ -1546,14 +1563,14 @@ docker run --rm --entrypoint /bin/bash pz-server:dev -c 'id; command -v rcon jq 
 ```
 Expected: `uid=1000(pz) gid=1000(pz)` and all three binaries resolve.
 
-- [ ] **Step 5: Verify the image does not contain server files**
+- [x] **Step 5: Verify the image does not contain server files**
 
 ```bash
 docker run --rm --entrypoint /bin/bash pz-server:dev -c 'ls -A /data/server | wc -l'
 ```
 Expected: `0` — the image must ship no Project Zomboid content.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add Dockerfile .dockerignore
@@ -1571,7 +1588,7 @@ git commit -m "feat: add server image running as uid 1000 without baked game fil
 - Consumes: the `pz-server` image from Task 8
 - Produces: a Compose stack with the `pz-server` service, the `pz-server`/`pz-zomboid`/`pz-backups` volumes and the `pz-internal` network. The `pz-backup` service is added in Task 10. `tests/smoke.sh` builds the image, starts a container, waits for `healthy`, saves over RCON, stops it and asserts a clean exit with a populated `Saves/` directory.
 
-- [ ] **Step 1: Write the Compose file**
+- [x] **Step 1: Write the Compose file**
 
 `docker-compose.yml`:
 
@@ -1628,7 +1645,7 @@ networks:
     internal: true
 ```
 
-- [ ] **Step 2: Validate the Compose file**
+- [x] **Step 2: Validate the Compose file**
 
 ```bash
 PZ_ADMIN_PASSWORD=x PZ_RCON_PASSWORD=y docker compose config >/dev/null
@@ -1636,14 +1653,14 @@ yamllint -c .yamllint docker-compose.yml
 ```
 Expected: both silent.
 
-- [ ] **Step 3: Verify the required-variable guard actually fires**
+- [x] **Step 3: Verify the required-variable guard actually fires**
 
 ```bash
 docker compose config 2>&1 | grep -q "set PZ_ADMIN_PASSWORD" && echo GUARD-OK
 ```
 Expected: `GUARD-OK` — starting without a password must fail loudly rather than boot an open server.
 
-- [ ] **Step 4: Write the smoke test**
+- [x] **Step 4: Write the smoke test**
 
 `tests/smoke.sh`:
 
@@ -1733,12 +1750,12 @@ fi
 echo "==> Smoke test passed (${save_count} files under Saves/)"
 ```
 
-- [ ] **Step 5: Run the smoke test**
+- [x] **Step 5: Run the smoke test**
 
 Run: `chmod +x tests/smoke.sh && ./tests/smoke.sh`
 Expected: `==> Smoke test passed` after roughly 10–20 minutes on the first run. If it times out during world generation, raise `SMOKE_TIMEOUT` rather than weakening the assertions.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docker-compose.yml tests/smoke.sh
@@ -1762,7 +1779,7 @@ git commit -m "feat: add compose stack and end-to-end smoke test"
   - `backup_rotate <backup_dir> <keep>` — deletes the oldest entries matching `pz-*` until at most `keep` remain.
   - `backup_notify <status> <message>` — POSTs to `${NTFY_URL}` when set, otherwise does nothing; always returns 0.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `tests/unit/backup.bats`:
 
@@ -1858,12 +1875,12 @@ teardown() {
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `./tests/run-unit.sh`
 Expected: FAIL — `scripts/backup/lib/backup.sh` does not exist.
 
-- [ ] **Step 3: Implement the backup library**
+- [x] **Step 3: Implement the backup library**
 
 `scripts/backup/lib/backup.sh`:
 
@@ -1978,12 +1995,12 @@ unquoted so it disappears entirely when the token is unset. Shellcheck flags thi
 as SC2086; add `# shellcheck disable=SC2086` directly above the `curl` call with a
 comment saying why, per the zero-warnings policy.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `./tests/run-unit.sh`
 Expected: PASS
 
-- [ ] **Step 5: Implement the backup entrypoint and the one-shot script**
+- [x] **Step 5: Implement the backup entrypoint and the one-shot script**
 
 `scripts/backup/backup-now.sh`:
 
@@ -2086,7 +2103,7 @@ main() {
 main "$@"
 ```
 
-- [ ] **Step 6: Write the sidecar Dockerfile**
+- [x] **Step 6: Write the sidecar Dockerfile**
 
 `Dockerfile.backup`:
 
@@ -2144,7 +2161,7 @@ with the command below and paste it into the `FROM` line before committing:
 docker buildx imagetools inspect debian:13-slim --format '{{.Manifest.Digest}}'
 ```
 
-- [ ] **Step 7: Add the sidecar to Compose**
+- [x] **Step 7: Add the sidecar to Compose**
 
 Insert into `docker-compose.yml` under `services:`, after `pz-server`:
 
@@ -2179,7 +2196,7 @@ Insert into `docker-compose.yml` under `services:`, after `pz-server`:
       - no-new-privileges:true
 ```
 
-- [ ] **Step 8: Verify the sidecar end to end**
+- [x] **Step 8: Verify the sidecar end to end**
 
 ```bash
 docker build -f Dockerfile.backup -t pz-backup:dev .
@@ -2200,7 +2217,7 @@ unreachable rather than failing the backup.
 
 Clean up: `docker volume rm pz-backup-test-data pz-backup-test-out`
 
-- [ ] **Step 9: Lint and commit**
+- [x] **Step 9: Lint and commit**
 
 ```bash
 shellcheck scripts/backup/entrypoint.sh scripts/backup/backup-now.sh scripts/backup/lib/backup.sh
@@ -2222,7 +2239,7 @@ git commit -m "feat: add backup sidecar with tar and borg-friendly directory mod
 - Consumes: `tests/run-unit.sh`, `tests/smoke.sh`, both Dockerfiles
 - Produces: three workflows and a Renovate configuration.
 
-- [ ] **Step 1: Write the lint workflow**
+- [x] **Step 1: Write the lint workflow**
 
 `.github/workflows/lint.yml`:
 
@@ -2280,7 +2297,7 @@ jobs:
           zizmor .github/workflows/
 ```
 
-- [ ] **Step 2: Write the test workflow**
+- [x] **Step 2: Write the test workflow**
 
 `.github/workflows/test.yml`:
 
@@ -2332,7 +2349,7 @@ jobs:
         run: ./tests/smoke.sh
 ```
 
-- [ ] **Step 3: Write the release workflow**
+- [x] **Step 3: Write the release workflow**
 
 `.github/workflows/release.yml`:
 
@@ -2414,7 +2431,7 @@ Note: `exit-code: "1"` on Trivy is deliberate, and `continue-on-error` is
 deliberately absent. A tolerant scanner that silently stops working looks exactly
 like a scanner that finds nothing.
 
-- [ ] **Step 4: Write the Renovate configuration**
+- [x] **Step 4: Write the Renovate configuration**
 
 `renovate.json`:
 
@@ -2439,7 +2456,7 @@ like a scanner that finds nothing.
 }
 ```
 
-- [ ] **Step 5: Validate the workflows locally**
+- [x] **Step 5: Validate the workflows locally**
 
 ```bash
 yamllint -c .yamllint .github/workflows/
@@ -2447,7 +2464,7 @@ zizmor .github/workflows/
 ```
 Expected: both silent. Fix anything zizmor reports; do not suppress findings.
 
-- [ ] **Step 6: Commit and verify on a pull request**
+- [x] **Step 6: Commit and verify on a pull request**
 
 ```bash
 git add .github/ renovate.json
@@ -2471,7 +2488,7 @@ loosening its assertions.
 - Consumes: the behaviour of every preceding task
 - Produces: the public documentation set
 
-- [ ] **Step 1: Write `README.md`**
+- [x] **Step 1: Write `README.md`**
 
 It must contain, in this order:
 
@@ -2485,7 +2502,7 @@ It must contain, in this order:
 8. Credits: adapted graceful-shutdown and INI-patching approach from `Danixu/project-zomboid-server-docker` (GPL-3.0), with a link.
 9. Licence and the disclaimer that this project is unaffiliated with The Indie Stone and ships no game files.
 
-- [ ] **Step 2: Write `docs/configuration.md`**
+- [x] **Step 2: Write `docs/configuration.md`**
 
 A table of every environment variable with default and effect, split into
 "Server container" and "Backup sidecar", covering: `PZ_BRANCH`, `PZ_MAX_RAM`,
@@ -2507,7 +2524,7 @@ because the server writes its command line to the log in clear text, and that
 changing it later is done in-game with `/changepwd` or by deleting the world
 database.
 
-- [ ] **Step 3: Write `docs/backup-restore.md`**
+- [x] **Step 3: Write `docs/backup-restore.md`**
 
 Cover: what is backed up (`Saves/` and `Server/` from the data volume), the two
 modes and when to choose which, how to trigger one by hand
@@ -2523,7 +2540,7 @@ compressed archive per run.
 
 State plainly that the restore procedure must be tried once before it is needed.
 
-- [ ] **Step 4: Write `docs/runbook.md`**
+- [x] **Step 4: Write `docs/runbook.md`**
 
 Cover: updating the game (recreate the container with `UPDATE_ON_START=true`),
 switching branch, changing the heap, adding mods, reading logs
@@ -2538,13 +2555,13 @@ troubleshooting table with at least these entries:
 | Players cannot connect from outside | UDP ports not forwarded | Forward `16261/udp` and `16262/udp` |
 | World reverted after a crash | Container was killed instead of stopped | Check `stop_grace_period`, restore from a backup |
 
-- [ ] **Step 5: Verify every documented command actually works**
+- [x] **Step 5: Verify every documented command actually works**
 
 Run each command block from the README and the runbook against the running
 stack. Any command that does not work as written is a documentation bug and is
 fixed before committing.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add README.md docs/configuration.md docs/backup-restore.md docs/runbook.md
