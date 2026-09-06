@@ -146,8 +146,16 @@ metric logic is written for this; the agent is the standard tool.
 The default is `false`. Without the variable there is no third-party code in the
 game's JVM and no additional listener.
 
-The agent jar (~600 KB) is added to the server image at build time so that
-enabling it needs no network access at runtime.
+The agent jar is added to the server image at build time so that enabling it
+needs no network access at runtime.
+
+> **Corrected while planning.** This section first claimed the jar was around
+> 600 KB. It is **10.7 MB** — the agent bundles its own dependencies. That is a
+> real cost on an image that is otherwise 519 MB, and it is paid by everyone,
+> including the majority who leave `PZ_JMX_METRICS` off. The implementation plan
+> therefore measures the resulting image and, if the increase is judged not worth
+> it, falls back to downloading the jar into the volume on first enable instead of
+> baking it in.
 
 ## 7. Integration
 
