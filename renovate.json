@@ -21,5 +21,15 @@
   ],
   "pre-commit": {
     "enabled": true
-  }
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "govulncheck, pinned as a plain string in the lint workflow where no manager looks",
+      "managerFilePatterns": ["/^\\.github/workflows/lint\\.yml$/"],
+      "matchStrings": ["GOVULNCHECK_VERSION: (?<currentValue>v[\\d.]+)"],
+      "depNameTemplate": "golang.org/x/vuln",
+      "datasourceTemplate": "go"
+    }
+  ]
 }

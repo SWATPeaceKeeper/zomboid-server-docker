@@ -18,6 +18,11 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   each `latest` tag from the registry and scans what is actually there. Its own
   workflow and badge on purpose: a red `Test` means the game broke the image, a
   red `Scan published` means a package in a shipped image grew a CVE.
+- **`govulncheck` runs on every pull request**, through the same pinned Go
+  toolchain as the release build. It is reachability-aware, so it reports a
+  vulnerability only when the affected symbol can actually be called from this
+  code. Trivy finds a vulnerable standard library in the built image as well,
+  but later and without naming the call that makes it matter.
 - `tests/check-lint-versions.sh` fails when a linter version in
   `.pre-commit-config.yaml` and its counterpart in the `env:` block of
   `.github/workflows/lint.yml` disagree. Both files said they were kept in step

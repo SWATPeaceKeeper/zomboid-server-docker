@@ -27,6 +27,7 @@ env:
   YAMLLINT_VERSION: 1.38.0
   ZIZMOR_VERSION: 1.30.0
   GO_IMAGE: golang:1.27-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728
+  GOVULNCHECK_VERSION: v1.7.0
 
 jobs:
   lint:
@@ -75,6 +76,19 @@ jobs:
         run: |
           docker run --rm -v "${PWD}/exporter:/src" -w /src "${GO_IMAGE}" \
             sh -c 'test -z "$(gofmt -l .)" || { gofmt -d .; exit 1; }; go vet ./...'
+
+      # Reachability-aware: a vulnerability is reported only when the affected
+      # symbol is actually reachable from this code, so this stays quiet instead
+      # of becoming noise somebody eventually silences. Trivy would find a
+      # vulnerable standard library in the built exporter too, but only after the
+      # build, and without saying which call makes it matter.
+      #
+      # Same pinned toolchain as the release build, for the reason above it.
+      - name: Check the Go dependencies for known vulnerabilities
+        run: |
+          docker run --rm -v "${PWD}/exporter:/src" -w /src "${GO_IMAGE}" \
+            sh -c "go install golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION} \
+              && govulncheck ./..."
 
       - name: Lint YAML
         run: |
