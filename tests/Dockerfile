@@ -16,4 +16,12 @@ RUN apk add --no-cache \
   findutils \
   jq \
   tar \
-  zstd
+  zstd \
+  && adduser -D -u 1000 bats
+
+# The suite reads the bind-mounted repository and writes only into a mktemp
+# directory under /tmp, so it has no reason to run as root. This image is never
+# published, so the finding this clears (trivy DS-0002) is not a real exposure —
+# but it was the only permanently expected failure in `trivy config .`, and a
+# scanner with one of those is a scanner people stop reading.
+USER 1000:1000

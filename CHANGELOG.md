@@ -20,6 +20,13 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   workflow it has not been told about, so a tool added to CI cannot quietly
   escape the comparison. Runs in CI and as a pre-commit hook.
 
+### Changed
+
+- The bats runner image runs as an unprivileged user. It is never published, so
+  the misconfiguration it carried was not an exposure — it was simply the one
+  finding standing between `trivy config .` and a clean run, and a scanner with
+  a permanently expected failure is one people stop reading.
+
 ### Fixed
 
 - **A failed ntfy notification did not say why.** `curl`'s own error text was
