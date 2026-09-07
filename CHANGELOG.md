@@ -33,6 +33,11 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Fixed
 
+- **CI's shellcheck and shfmt runs skipped the bats suite.** Both matched
+  `*.sh`, while the pre-commit hooks match shell by type and have always covered
+  `tests/unit/*.bats`. A local hook stricter than CI is the same problem as a
+  local hook on a different version: which run you believe depends on which one
+  you happened to trigger. Both now include `*.bats`.
 - **A failed ntfy notification did not say why.** `curl`'s own error text was
   discarded, so a rejected token and an unreachable host logged the same
   sentence. The warning now carries it. The authorization header is built as an

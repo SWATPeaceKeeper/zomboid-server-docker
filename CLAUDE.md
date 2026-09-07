@@ -100,9 +100,9 @@ particular `sed` ran.
 `prek install` once, then `prek run` before committing. The full CI set:
 
 ```bash
-find scripts tests -name '*.sh' -print0 \
+find scripts tests \( -name '*.sh' -o -name '*.bats' \) -print0 \
   | xargs -0 docker run --rm -v "${PWD}:/mnt" koalaman/shellcheck:v0.11.0
-find scripts tests -name '*.sh' -print0 \
+find scripts tests \( -name '*.sh' -o -name '*.bats' \) -print0 \
   | xargs -0 docker run --rm -v "${PWD}:/mnt" -w /mnt mvdan/shfmt:v3.14.0-alpine -i 2 -d
 docker run --rm -i hadolint/hadolint:v2.15.1 hadolint - < Dockerfile
 yamllint -c .yamllint .
