@@ -111,3 +111,56 @@ teardown() {
   run jvm_set_jmx_agent "${JSON}" "${TEST_TMP}/absent.jar" "9404"
   [ "$status" -ne 0 ]
 }
+
+@test "jvm_size_to_bytes understands the JVM size suffixes" {
+  run jvm_size_to_bytes "4g"
+  [ "$output" = "4294967296" ]
+  run jvm_size_to_bytes "512m"
+  [ "$output" = "536870912" ]
+  run jvm_size_to_bytes "2048k"
+  [ "$output" = "2097152" ]
+  run jvm_size_to_bytes "1024"
+  [ "$output" = "1024" ]
+}
+
+@test "jvm_size_to_bytes rejects anything else" {
+  run jvm_size_to_bytes "lots"
+  [ "$status" -eq 1 ]
+  run jvm_size_to_bytes "4gb"
+  [ "$status" -eq 1 ]
+  run jvm_size_to_bytes ""
+  [ "$status" -eq 1 ]
+}
+
+@test "jvm_check_memory_limit passes when there is no limit at all" {
+  run jvm_check_memory_limit "64g" ""
+  [ "$status" -eq 0 ]
+}
+
+@test "jvm_check_memory_limit passes when the limit holds heap plus headroom" {
+  # 4 GiB heap plus the 3 GiB Build 42 needs outside it.
+  run jvm_check_memory_limit "4g" "$((7 * 1024 * 1024 * 1024))"
+  [ "$status" -eq 0 ]
+}
+
+@test "jvm_check_memory_limit fails when the limit cannot hold the heap" {
+  run jvm_check_memory_limit "8g" "$((7 * 1024 * 1024 * 1024))"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"PZ_MEM_LIMIT"* ]]
+  [[ "$output" == *"11"* ]]
+}
+
+@test "jvm_check_memory_limit fails on a PZ_MAX_RAM it cannot read" {
+  run jvm_check_memory_limit "plenty" "$((7 * 1024 * 1024 * 1024))"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"PZ_MAX_RAM"* ]]
+}
+
+# The suite runs inside a container and cannot choose its own cgroup, so this
+# checks the contract rather than a value: either a plain byte count or nothing
+# at all, never "max" and never a v1 placeholder the size of a galaxy.
+@test "jvm_container_memory_limit reports a byte count or nothing" {
+  run jvm_container_memory_limit
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ ^[0-9]*$ ]]
+}
