@@ -22,6 +22,10 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Changed
 
+- The server's console FIFO is created with mode 0600 instead of the image's
+  default 0644. Anything able to write to it issues console commands on the
+  server; only uid 1000 exists in the container, so this closes an intent gap
+  rather than a hole.
 - The bats runner image runs as an unprivileged user. It is never published, so
   the misconfiguration it carried was not an exposure — it was simply the one
   finding standing between `trivy config .` and a clean run, and a scanner with
