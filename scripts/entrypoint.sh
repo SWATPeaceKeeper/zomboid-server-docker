@@ -140,7 +140,11 @@ start_server() {
   fi
 
   rm -f "${SERVER_CONSOLE}"
-  mkfifo "${SERVER_CONSOLE}"
+  # Created 0600 rather than at the image's default umask of 022. Anything that
+  # can write to this FIFO issues console commands on the server. Only uid 1000
+  # exists in the container, so 0644 was not exploitable — the umask is here so
+  # the intent stops depending on that staying true.
+  (umask 077 && mkfifo "${SERVER_CONSOLE}")
   # Held open read-write for the lifetime of this script. Without a writer the
   # server would read EOF immediately and stop accepting console commands.
   exec {CONSOLE_FD}<>"${SERVER_CONSOLE}"
