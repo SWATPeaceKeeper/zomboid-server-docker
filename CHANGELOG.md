@@ -11,6 +11,20 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Added
 
+- **The server container has a memory limit**, `PZ_MEM_LIMIT`, defaulting to
+  `7g` — the default heap plus the roughly 3 GB Build 42 uses outside it. Until
+  now a JVM configured larger than the host could supply took the *host* down
+  rather than the container, because the OOM killer picks its own victim.
+
+  Raising `PZ_MAX_RAM` without raising the limit is refused at startup: the
+  entrypoint compares the container's actual cgroup limit against the heap plus
+  that headroom and stops before anything is downloaded, naming both numbers and
+  the fix. A silent break is the thing worth avoiding here — otherwise the server
+  runs for an hour and is then killed mid-session, which reads like a crash.
+
+  Deployments that do not use the Compose file, or hosts that report no limit,
+  are unaffected: with nothing to compare against, the check does nothing.
+
 - **The published images are scanned again every night.** Trivy ran once, at
   publish time, and never looked at the image afterwards, so a vulnerability
   disclosed the week after a release stayed invisible for as long as that

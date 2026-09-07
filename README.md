@@ -456,6 +456,20 @@ becomes healthy.
 The value is written into `ProjectZomboid64.json` and nowhere else, so there is
 only ever one number to look at.
 
+The Compose file caps the container at `PZ_MEM_LIMIT`, `7g` by default — the
+default heap plus that headroom. The cap exists so an oversized heap takes down
+the container instead of the host, where the OOM killer would pick a victim of
+its own choosing. **Raise both together:**
+
+```dotenv
+PZ_MAX_RAM=6g
+PZ_MEM_LIMIT=9g
+```
+
+Raising only the heap is refused at startup, before the download, with a message
+naming both numbers. That is deliberate: the alternative is a server that runs
+for an hour and is then killed mid-session.
+
 ## Backups
 
 The sidecar takes a backup when it starts, then every `BACKUP_INTERVAL` (6 hours
@@ -572,6 +586,7 @@ its ceiling.
 | Symptom | Cause | Fix |
 |---|---|---|
 | Container restarts before ever becoming healthy | Heap bigger than the host can supply | Lower `PZ_MAX_RAM`; check `free -g` |
+| `This container may use N GiB, but PZ_MAX_RAM needs about M GiB` | `PZ_MAX_RAM` was raised without `PZ_MEM_LIMIT` | Set `PZ_MEM_LIMIT` to at least the M in the message |
 | `... is not writable by uid 1000` | Bind mount owned by someone else | `sudo chown -R 1000:1000 <host directory>` |
 | Mods download but never load | Missing backslash in `Mods` on Build 42, or a Workshop title used as a mod id | Use the `id=` from `mod.info`, prefix each with `\` |
 | Friends cannot connect from outside | UDP ports not forwarded | Forward `16261/udp` and `16262/udp`; do not forward 27015 |
