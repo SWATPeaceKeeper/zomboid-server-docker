@@ -45,6 +45,14 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Fixed
 
+- **The monitoring overlay put RCON on the shared monitoring network.**
+  `docker-compose.monitoring.yml` joined `pz-server` to that network
+  unconditionally, so port 27015 — full administration of the game server — and
+  the two UDP game ports were reachable from every container in the monitoring
+  stack, whether or not the JVM metrics were switched on. `docker-compose.yml`
+  promises the opposite in as many words. Only the exporter joins now; the
+  server does so through the new `docker-compose.monitoring-jvm.yml`, which is
+  what `PZ_JMX_METRICS=true` actually needs, and which says what it costs.
 - **CI's shellcheck and shfmt runs skipped the bats suite.** Both matched
   `*.sh`, while the pre-commit hooks match shell by type and have always covered
   `tests/unit/*.bats`. A local hook stricter than CI is the same problem as a

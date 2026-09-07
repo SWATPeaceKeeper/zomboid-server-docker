@@ -532,8 +532,29 @@ environment:
 ```
 
 The server then serves `jvm_*` on port `9404` through the Prometheus JMX agent:
-heap by area, garbage collection, threads. Add a second scrape job for
-`pz-server:9404`.
+heap by area, garbage collection, threads.
+
+To let Prometheus reach that port, add the second overlay:
+
+```bash
+docker compose -f docker-compose.yml \
+  -f docker-compose.monitoring.yml \
+  -f docker-compose.monitoring-jvm.yml up -d
+```
+
+```yaml
+scrape_configs:
+  - job_name: project-zomboid-jvm
+    static_configs:
+      - targets: ["pz-server:9404"]
+```
+
+It is a separate file because it is a separate decision: it joins `pz-server` to
+the shared monitoring network, which makes RCON on port 27015 reachable from
+every other container on that network. An attacker still needs the RCON
+password, but the set of places one can be attempted from grows from this stack
+to your whole monitoring stack. The plain monitoring overlay puts only the
+exporter on that network and leaves the server where it was.
 
 The useful one is `jvm_memory_used_bytes{area="heap"}` against
 `jvm_memory_max_bytes{area="heap"}` — that pair is what actually tells you

@@ -118,4 +118,9 @@ networks:
   # the container off from the network. Only the two UDP game ports are
   # published, so RCON is reachable from other containers on this network and
   # from the Docker host itself, and from nowhere else.
+  #
+  # One overlay deliberately gives that up: docker-compose.monitoring-jvm.yml
+  # joins pz-server to the shared monitoring network so Prometheus can scrape the
+  # JMX agent, and RCON is then reachable from everything else on that network
+  # too. The plain monitoring overlay does not - only the exporter joins.
   pz-internal:
