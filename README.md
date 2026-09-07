@@ -631,16 +631,22 @@ See [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
 
 ### Verifying an image
 
-Every published image is signed by the release workflow and carries build
-provenance and an SBOM. The signature is keyless: it is bound to this
-repository's workflow identity and recorded in the public transparency log,
-which is why the command below asks who signed rather than for a key.
+Images published by the release workflow are signed and carry build provenance
+and an SBOM. The signature is keyless: it is bound to this repository's workflow
+identity and recorded in the public transparency log, which is why the command
+below asks who signed rather than for a key.
 
 ```bash
-cosign verify ghcr.io/swatpeacekeeper/zomboid-server-docker:latest \
+cosign verify ghcr.io/swatpeacekeeper/zomboid-server-docker:edge \
   --certificate-identity-regexp '^https://github\.com/SWATPeaceKeeper/zomboid-server-docker/' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
+
+**Which images carry it:** everything built since signing was introduced, which
+today means `edge` and `sha-<commit>`. `latest` and the version tags get theirs
+with the next release — until then `cosign verify` on those answers `no
+signatures found`, because there is nothing to find rather than because
+something is wrong.
 
 The attestations, including the SBOM:
 
