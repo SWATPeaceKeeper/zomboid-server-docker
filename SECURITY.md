@@ -82,6 +82,11 @@ So you know what you are getting and what is left to you:
 - **The published images are scanned again every night**, against what is in the
   registry rather than a fresh build. A vulnerability disclosed after a release
   would otherwise stay invisible for as long as that release is the current one.
+- **Every published image is signed, and carries provenance and an SBOM.** The
+  signature is keyless and bound to this repository's workflow identity, so
+  there is no private key to leak and the claim "this came from that commit in
+  this repository" is verifiable rather than asserted. The `cosign verify`
+  command is in the README under Images and versioning.
 - **`govulncheck` runs on every pull request** over the exporter's Go
   dependencies and the standard library it is compiled against — the class of
   finding a base-image update cannot fix.
