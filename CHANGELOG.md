@@ -22,6 +22,13 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Fixed
 
+- **A failed ntfy notification did not say why.** `curl`'s own error text was
+  discarded, so a rejected token and an unreachable host logged the same
+  sentence. The warning now carries it. The authorization header is built as an
+  array while here, like every other command line in this codebase, which
+  retires a `shellcheck disable`; the word splitting that suppression covered
+  turned out not to happen — bash honours the quotes inside `${VAR:+...}`, so a
+  token containing a space or a star was never split or globbed.
 - **Workflow runs were not serialised.** Two pushes to `main` in quick
   succession started two releases that raced for the `edge` tag, and the winner
   was whichever finished last rather than whichever was newer. Re-pushing to a
