@@ -41,14 +41,19 @@ jobs:
       - name: Check the linter versions against .pre-commit-config.yaml
         run: ./tests/check-lint-versions.sh
 
+      # .bats included: the pre-commit hooks match shell by type and have always
+      # covered the test suite, while these two matched *.sh and never did. A
+      # local hook that is stricter than CI is the same problem as a local hook
+      # on a different version - the run you believe depends on which one you
+      # happened to trigger.
       - name: Run shellcheck
         run: |
-          find scripts tests -name '*.sh' -print0 \
+          find scripts tests \( -name '*.sh' -o -name '*.bats' \) -print0 \
             | xargs -0 docker run --rm -v "${PWD}:/mnt" "${SHELLCHECK_IMAGE}"
 
       - name: Check shell formatting
         run: |
-          find scripts tests -name '*.sh' -print0 \
+          find scripts tests \( -name '*.sh' -o -name '*.bats' \) -print0 \
             | xargs -0 docker run --rm -v "${PWD}:/mnt" -w /mnt "${SHFMT_IMAGE}" -i 2 -d
 
       # Derived, not listed. The list this replaces had been missing

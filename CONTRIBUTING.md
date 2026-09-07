@@ -83,9 +83,9 @@ then fix it.
 `prek run` covers the files you changed. The full set, identical to CI:
 
 ```bash
-find scripts tests -name '*.sh' -print0 \
+find scripts tests \( -name '*.sh' -o -name '*.bats' \) -print0 \
   | xargs -0 docker run --rm -v "${PWD}:/mnt" koalaman/shellcheck:v0.11.0
-find scripts tests -name '*.sh' -print0 \
+find scripts tests \( -name '*.sh' -o -name '*.bats' \) -print0 \
   | xargs -0 docker run --rm -v "${PWD}:/mnt" -w /mnt mvdan/shfmt:v3.14.0-alpine -i 2 -d
 for f in Dockerfile Dockerfile.backup Dockerfile.exporter tests/Dockerfile; do
   docker run --rm -i hadolint/hadolint:v2.15.1 hadolint - <"$f"
