@@ -36,6 +36,11 @@ preflight() {
       return 1
     fi
   done
+
+  # Checked before anything is downloaded or generated. A heap that does not fit
+  # the container's limit ends in an OOM kill during play, and 7 GB would have
+  # been downloaded first.
+  jvm_check_memory_limit "${PZ_MAX_RAM}" "$(jvm_container_memory_limit)"
 }
 
 install_phase() {

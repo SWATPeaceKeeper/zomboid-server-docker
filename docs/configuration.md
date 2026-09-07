@@ -31,6 +31,23 @@
 | `PZ_DATA_DIR` | `/data/zomboid` | Config, saves and logs. Passed to the server as `-cachedir=`. |
 | `TZ` | `Europe/Berlin` | Container timezone, which is what log timestamps use. |
 
+### About `PZ_MEM_LIMIT`
+
+`PZ_MEM_LIMIT` is read by the Compose file, not by the container: it becomes the
+`mem_limit` on `pz-server` and defaults to `7g`. That is the default `PZ_MAX_RAM`
+of `4g` plus the roughly 3 GB Build 42 uses outside the Java heap to stream the
+map.
+
+**The two move together.** Raising `PZ_MAX_RAM` without raising `PZ_MEM_LIMIT`
+is refused: the entrypoint compares the container's actual cgroup limit against
+the heap plus that headroom and stops before anything is downloaded, naming both
+numbers. Without the limit the JVM would instead be killed by the OOM killer
+somewhere in the middle of a session, which looks like a crash rather than like
+a configuration mistake.
+
+Running without Compose, or on a host that reports no limit, skips the check —
+there is nothing to compare against.
+
 ### About `ADMIN_PASSWORD`
 
 It is passed on the command line **only on the very first boot**, detected by the

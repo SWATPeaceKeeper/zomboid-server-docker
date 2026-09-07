@@ -15,6 +15,15 @@ services:
     # The entrypoint answers SIGTERM by sending `quit` and waiting for the world
     # to be written. Docker's 10s default would SIGKILL a large world mid-save.
     stop_grace_period: 180s
+    # Without a limit a JVM configured larger than the host can supply takes the
+    # host down instead of the container: the OOM killer picks a victim, and it
+    # is not necessarily this one.
+    #
+    # The default is PZ_MAX_RAM's default of 4g plus the ~3 GB Build 42 uses
+    # outside the heap for map streaming. Raise both together - the entrypoint
+    # refuses to start when this limit cannot hold the heap, rather than letting
+    # the server be killed mid-session.
+    mem_limit: "${PZ_MEM_LIMIT:-7g}"
     environment:
       PZ_BRANCH: "${PZ_BRANCH:-public}"
       PZ_MAX_RAM: "${PZ_MAX_RAM:-4g}"

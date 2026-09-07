@@ -112,6 +112,7 @@ docker compose exec pz-server rcon -a 127.0.0.1:27015 -p "$PZ_RCON_PASSWORD" \
 | Symptom | Cause | Fix |
 |---|---|---|
 | Container restarts before ever becoming healthy | Heap larger than the host can supply | Lower `PZ_MAX_RAM`, check `free -g` |
+| Startup stops with `This container may use N GiB, but PZ_MAX_RAM needs about M GiB` | `PZ_MAX_RAM` raised without `PZ_MEM_LIMIT` | Set `PZ_MEM_LIMIT` to at least M and recreate: `docker compose up -d` |
 | `... is not writable by uid 1000` | Bind mount owned by another user | `sudo chown -R 1000:1000 <host directory>` |
 | Mods download but do not load | Missing backslash in `Mods` on Build 42, or a Workshop title used instead of a mod id | Use the `id=` from `mod.info`, prefix each with `\` |
 | Players cannot connect from outside | UDP ports not forwarded | Forward `16261/udp` and `16262/udp` on the router |
