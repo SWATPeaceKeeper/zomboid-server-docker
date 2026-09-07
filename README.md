@@ -37,6 +37,8 @@ Three things set this apart from the other images:
 - [Metrics](#metrics)
 - [Troubleshooting](#troubleshooting)
 - [Images and versioning](#images-and-versioning)
+- [Contributing](#contributing)
+- [AI assistance](#ai-assistance)
 
 ## Requirements
 
@@ -611,6 +613,22 @@ adapted from
 [Danixu/project-zomboid-server-docker](https://github.com/Danixu/project-zomboid-server-docker)
 (GPL-3.0), with attribution in the file headers. That project solved both
 problems well and there was no sense in solving them again differently.
+
+## Contributing
+
+Bug reports, fixes and documentation corrections are welcome.
+[CONTRIBUTING.md](CONTRIBUTING.md) has the build, test and lint commands — every
+one of them runs in a container, so Docker is the only thing you need
+installed.
+
+Found a vulnerability? Please report it privately:
+[SECURITY.md](SECURITY.md).
+
+## AI assistance
+
+This project is developed with AI assistance, and
+[AI-POLICY.md](AI-POLICY.md) says exactly what that means, what verifies the
+code regardless, and what the rules are for AI-assisted contributions.
 
 ## Licence
 
