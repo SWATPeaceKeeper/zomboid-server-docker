@@ -92,6 +92,7 @@ for f in Dockerfile Dockerfile.backup Dockerfile.exporter tests/Dockerfile; do
 done
 yamllint -c .yamllint .
 zizmor --persona=regular .github/workflows/
+./tests/check-lint-versions.sh
 ```
 
 Zero warnings. If one genuinely cannot be fixed, add an inline ignore with a
@@ -101,6 +102,11 @@ comment explaining why — the `hadolint ignore=DL3008` lines show the shape.
 `.github/workflows/lint.yml` are kept identical on purpose.** If you bump one,
 bump the other in the same commit. A linter that reports differently locally
 than in CI turns every finding into an argument about which run to believe.
+
+`./tests/check-lint-versions.sh` enforces that, in CI and as a pre-commit hook.
+It also fails on a pin in the workflow it has never been told about, so a tool
+added to CI cannot slip past it — teach it about the new pin, or list the pin as
+CI-only with the others that have no hook to compare against.
 
 ## Style
 

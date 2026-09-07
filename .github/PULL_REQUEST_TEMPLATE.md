@@ -30,7 +30,8 @@ searching the issue tracker in six months will match on.
 - [ ] Documentation updated in this same PR (README, `docs/`, `CHANGELOG.md`)
 - [ ] New behaviour has a test that fails without the change
 - [ ] Linter versions in `.pre-commit-config.yaml` and
-      `.github/workflows/lint.yml` still match, if either was touched
+      `.github/workflows/lint.yml` still match, if either was touched —
+      `./tests/check-lint-versions.sh` says so, and CI runs it
 - [ ] No credentials, `.env` files or real passwords in the diff
 
 ## AI assistance
