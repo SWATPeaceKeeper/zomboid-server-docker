@@ -9,6 +9,18 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The stack test reported a truncated metrics fetch as a broken JMX agent.**
+  `curl` streams to stdout, so a transfer that dies part way through leaves a
+  partial body behind; the test discarded curl's exit status, so that body looked
+  complete. `jvm_memory_used_bytes` sits in the last 6% of the agent's output, so
+  a cut-off response kept every earlier `jvm_` family and lost exactly the one
+  being asserted — which reads precisely like an agent that never loaded. That is
+  how an unchanged commit went from green to red overnight. Both metrics fetches
+  now check the exit status and retry a slow scrape, and the failure message says
+  which of the two problems actually occurred.
+
 ## [1.2.0] - 2026-09-06
 
 ### Added

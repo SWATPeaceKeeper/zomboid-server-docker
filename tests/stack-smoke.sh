@@ -31,6 +31,49 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Fetches a metrics endpoint from inside pz-backup, and insists on a complete
+# body.
+#
+# curl streams to stdout, so a transfer that dies part way through still leaves
+# a partial body behind. Discarding its exit status turns that into a response
+# that looks complete and is not, and the caller then reports a missing metric
+# as though the exporter were broken. That is exactly how an unchanged commit
+# went from green to red overnight: `jvm_memory_used_bytes` sits in the last 6%
+# of the JMX agent's output, so a truncated body keeps every earlier jvm_ family
+# and loses that one, which reads precisely like an agent that never loaded.
+#
+# Retried because a single slow scrape is not a broken stack. The JVM can be
+# busy right after world generation, and both endpoints are cheap and
+# idempotent, so asking again costs nothing and removes the whole class of
+# failure.
+fetch_metrics() {
+  local url="$1"
+  local attempts="${METRICS_RETRIES:-3}"
+  local attempt=1 rc=0 body=""
+
+  while [ "${attempt}" -le "${attempts}" ]; do
+    rc=0
+    # stderr is deliberately not discarded: curl's own message is the only thing
+    # that distinguishes a timeout from a refused connection.
+    body="$(docker compose exec -T pz-backup \
+      curl -sS --fail --max-time "${METRICS_TIMEOUT:-60}" "${url}")" || rc=$?
+    if [ "${rc}" -eq 0 ]; then
+      printf '%s' "${body}"
+      return 0
+    fi
+    echo "   attempt ${attempt}/${attempts} for ${url} failed: curl exit ${rc}," \
+      "$(printf '%s' "${body}" | wc -c) bytes received" >&2
+    attempt=$((attempt + 1))
+    if [ "${attempt}" -le "${attempts}" ]; then
+      sleep 5
+    fi
+  done
+
+  echo "!! Could not fetch ${url} completely after ${attempts} attempts" \
+    "(last curl exit ${rc})." >&2
+  return 1
+}
+
 # The Compose file pins container names, so a stack that is already up would
 # collide and the failure would look like a bug in this test.
 if docker ps --all --format '{{.Names}}' | grep -qx 'pz-server'; then
@@ -96,8 +139,7 @@ echo "==> Checking the exporter answers against the live server"
 # Fetched from another container rather than from inside the exporter, whose
 # image is scratch and has no shell. This also proves it is reachable over the
 # network, which is how Prometheus will reach it.
-metrics="$(docker compose exec -T pz-backup \
-  curl -sf --max-time 20 http://pz-exporter:9401/metrics)"
+metrics="$(fetch_metrics http://pz-exporter:9401/metrics)"
 
 if ! printf '%s' "${metrics}" | grep -qE '^pz_up 1$'; then
   echo "!! pz_up is not 1; the exporter cannot reach the server over RCON" >&2
@@ -127,15 +169,30 @@ fi
 echo "==> Exporter reports pz_up 1, the backup and the build id"
 
 echo "==> Checking the JMX agent loaded into the game JVM"
-jvm_metrics="$(docker compose exec -T pz-backup \
-  curl -sf --max-time 20 http://pz-server:9404/metrics 2>/dev/null || true)"
+# The fetch failing and the metric being absent are different problems with
+# opposite fixes, so they are kept apart here rather than collapsed into one
+# message. The diagnostics below run either way, because "the agent never
+# loaded" also shows up as a refused connection.
+jvm_rc=0
+jvm_metrics="$(fetch_metrics http://pz-server:9404/metrics)" || jvm_rc=$?
+
 # The metric is jvm_memory_used_bytes, not jvm_memory_bytes_used: the Prometheus
 # Java client renamed it between 0.x and 1.x. Both are checked so that a future
 # rename fails with a clear message rather than looking like a broken agent.
-if ! printf '%s' "${jvm_metrics}" | grep -qE '^jvm_memory_(used_bytes|bytes_used)'; then
-  echo "!! No jvm heap metrics on pz-server:9404 although PZ_JMX_METRICS is true." >&2
-  echo "-- jvm_ metric names actually served --" >&2
-  printf '%s\n' "${jvm_metrics}" | grep -oE '^jvm_[a-z_]+' | sort -u | head -15 >&2 || true
+if [ "${jvm_rc}" -ne 0 ] ||
+  ! printf '%s' "${jvm_metrics}" | grep -qE '^jvm_memory_(used_bytes|bytes_used)'; then
+  if [ "${jvm_rc}" -ne 0 ]; then
+    echo "!! pz-server:9404 never served a complete response." >&2
+  else
+    echo "!! No jvm heap metrics on pz-server:9404 although PZ_JMX_METRICS is true." >&2
+  fi
+
+  # Not truncated with `head`: jvm_memory_used_bytes sorts near the end of this
+  # list, so a shortened one could never show whether the metric this test asks
+  # for was actually there. The sample count makes a partial body obvious.
+  echo "-- jvm_ families served, from $(printf '%s\n' "${jvm_metrics}" |
+    grep -c '^jvm_') samples --" >&2
+  printf '%s\n' "${jvm_metrics}" | grep -oE '^jvm_[a-z_]+' | sort -u >&2 || true
 
   echo "-- the agent argument in ProjectZomboid64.json --" >&2
   docker compose exec -T pz-server \
