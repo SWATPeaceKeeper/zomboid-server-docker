@@ -11,6 +11,12 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Fixed
 
+- **CI never linted `Dockerfile.exporter`.** The hadolint step worked from a
+  hand-written list that the file was never added to, so the exporter image
+  definition could be changed without hadolint ever seeing it. The local
+  pre-commit hook did cover it, which is why the gap stayed quiet: the two never
+  disagreed out loud. The list is now derived from the working tree, and every
+  Dockerfile is linted before the step fails.
 - **The stack test reported a truncated metrics fetch as a broken JMX agent.**
   `curl` streams to stdout, so a transfer that dies part way through leaves a
   partial body behind; the test discarded curl's exit status, so that body looked
