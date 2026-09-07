@@ -75,6 +75,9 @@ So you know what you are getting and what is left to you:
   published**, and is allowed to fail the build. There is no
   `continue-on-error` on the scanner: a broken scanner and a clean scan must not
   look the same.
+- **The published images are scanned again every night**, against what is in the
+  registry rather than a fresh build. A vulnerability disclosed after a release
+  would otherwise stay invisible for as long as that release is the current one.
 - **The admin password is passed to the game only on the very first boot**,
   because Project Zomboid writes its whole command line into the log in clear
   text on every start.

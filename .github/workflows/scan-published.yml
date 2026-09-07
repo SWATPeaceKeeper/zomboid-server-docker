@@ -1,0 +1,72 @@
+---
+name: Scan published
+
+# Trivy runs once, at publish time, and never looks at the image again. A
+# vulnerability disclosed the week after a release is therefore invisible: the
+# artefact people are pulling right now has not been examined since the day it
+# was built. This scans what is actually in the registry rather than what a fresh
+# build would produce.
+#
+# Its own workflow rather than a job in test.yml, because the two badges say
+# different things. A red Test means a Project Zomboid update broke the image; a
+# red Scan means a package inside a published image grew a CVE. Merging them
+# would make both harder to read.
+"on":
+  schedule:
+    # Two hours after the nightly Test run, so a failure of either is easy to
+    # attribute without reading timestamps.
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read  # pulls the published images in order to scan them
+    strategy:
+      # One vulnerable image must not hide the state of the other two.
+      fail-fast: false
+      matrix:
+        image:
+          - zomboid-server-docker
+          - zomboid-server-docker-backup
+          - zomboid-server-docker-exporter
+    steps:
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # GHCR paths are lowercase; the repository owner is not.
+      - name: Derive the registry namespace
+        id: ns
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          printf 'owner=%s\n' "$(printf '%s' "${OWNER}" | tr '[:upper:]' '[:lower:]')" \
+            >>"${GITHUB_OUTPUT}"
+
+      # `latest` rather than `edge`: it is the tag a release moves and therefore
+      # the artefact most people are running.
+      #
+      # ignore-unfixed stays true. A finding with no fixed version available is
+      # real but not actionable here, and a nightly that fails on it trains
+      # everyone to stop reading the badge. No continue-on-error either, for the
+      # reason spelled out in release.yml.
+      - name: Scan the published image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: ghcr.io/${{ steps.ns.outputs.owner }}/${{ matrix.image }}:latest
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"

@@ -3,6 +3,7 @@
 [![Lint](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/lint.yml/badge.svg)](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/lint.yml)
 [![Test](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/test.yml/badge.svg)](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/test.yml)
 [![Release](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/release.yml/badge.svg)](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/release.yml)
+[![Scan published](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/scan-published.yml/badge.svg)](https://github.com/SWATPeaceKeeper/zomboid-server-docker/actions/workflows/scan-published.yml)
 [![Licence: GPL-3.0-or-later](https://img.shields.io/badge/licence-GPL--3.0--or--later-blue.svg)](LICENSE)
 
 Run a [Project Zomboid](https://projectzomboid.com/) dedicated server in Docker,

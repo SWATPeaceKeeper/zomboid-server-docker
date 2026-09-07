@@ -11,6 +11,13 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Added
 
+- **The published images are scanned again every night.** Trivy ran once, at
+  publish time, and never looked at the image afterwards, so a vulnerability
+  disclosed the week after a release stayed invisible for as long as that
+  release was the current one. A separate `Scan published` workflow now pulls
+  each `latest` tag from the registry and scans what is actually there. Its own
+  workflow and badge on purpose: a red `Test` means the game broke the image, a
+  red `Scan published` means a package in a shipped image grew a CVE.
 - `tests/check-lint-versions.sh` fails when a linter version in
   `.pre-commit-config.yaml` and its counterpart in the `env:` block of
   `.github/workflows/lint.yml` disagree. Both files said they were kept in step
