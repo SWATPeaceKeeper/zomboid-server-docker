@@ -65,7 +65,11 @@ So you know what you are getting and what is left to you:
 
 - Both service containers run as **uid/gid 1000, never root**, with
   `no-new-privileges:true` in the shipped Compose file.
-- **RCON is not published to the host.** Only the two UDP game ports are.
+- **RCON is not published to the host.** Only the two UDP game ports are. The
+  one exception is opt-in and documented where it happens:
+  `docker-compose.monitoring-jvm.yml` joins the server to a shared monitoring
+  network so the JVM metrics can be scraped, and RCON is then reachable from the
+  other containers on that network.
 - The exporter mounts everything **read-only** and runs `FROM scratch` — no
   shell, no package manager, no packages to carry advisories.
 - **Every base image is pinned by digest**, and third-party Go binaries are

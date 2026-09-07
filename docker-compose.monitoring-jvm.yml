@@ -1,0 +1,33 @@
+---
+# Layered on top of the monitoring overlay when PZ_JMX_METRICS=true, so that
+# Prometheus can reach the JMX agent on pz-server:9404:
+#
+#   docker compose -f docker-compose.yml \
+#     -f docker-compose.monitoring.yml \
+#     -f docker-compose.monitoring-jvm.yml up -d
+#
+# What this costs, stated plainly because it is a real trade: joining the shared
+# network exposes port 27015 - RCON, full administration of the game server - and
+# the two UDP game ports to every container on it. Prometheus, Grafana, cAdvisor,
+# node-exporter and whatever else lives there. An attacker still needs the RCON
+# password, so this is not a compromise on its own; it widens who can attempt
+# one, from "this stack" to "the monitoring stack as well".
+#
+# That is why it is a separate file. The base overlay keeps the guarantee in
+# docker-compose.yml intact, and giving it up is an explicit act.
+#
+# Prometheus side:
+#
+#   scrape_configs:
+#     - job_name: project-zomboid-jvm
+#       static_configs:
+#         - targets: ["pz-server:9404"]
+services:
+  pz-server:
+    networks:
+      - pz-internal
+      - monitoring
+
+networks:
+  monitoring:
+    external: true
