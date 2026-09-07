@@ -50,7 +50,7 @@ checks=(
 # Pins with no pre-commit hook to compare against. Listed rather than skipped
 # silently, so that a new pin in the workflow has to be classified as either
 # compared or deliberately CI-only.
-ci_only=(ZIZMOR_VERSION GO_IMAGE)
+ci_only=(ZIZMOR_VERSION GO_IMAGE GOVULNCHECK_VERSION)
 
 status=0
 

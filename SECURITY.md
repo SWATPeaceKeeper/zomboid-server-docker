@@ -78,6 +78,9 @@ So you know what you are getting and what is left to you:
 - **The published images are scanned again every night**, against what is in the
   registry rather than a fresh build. A vulnerability disclosed after a release
   would otherwise stay invisible for as long as that release is the current one.
+- **`govulncheck` runs on every pull request** over the exporter's Go
+  dependencies and the standard library it is compiled against — the class of
+  finding a base-image update cannot fix.
 - **The admin password is passed to the game only on the very first boot**,
   because Project Zomboid writes its whole command line into the log in clear
   text on every start.
