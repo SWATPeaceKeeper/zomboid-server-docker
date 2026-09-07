@@ -11,6 +11,13 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Fixed
 
+- **Workflow runs were not serialised.** Two pushes to `main` in quick
+  succession started two releases that raced for the `edge` tag, and the winner
+  was whichever finished last rather than whichever was newer. Re-pushing to a
+  pull request branch also paid for the 7 GB smoke test twice for one answer.
+  Lint and Test now cancel a superseded run. Release queues instead of
+  cancelling, because a publish killed between two of its three matrix jobs
+  would leave the images at different commits.
 - **CI never linted `Dockerfile.exporter`.** The hadolint step worked from a
   hand-written list that the file was never added to, so the exporter image
   definition could be changed without hadolint ever seeing it. The local

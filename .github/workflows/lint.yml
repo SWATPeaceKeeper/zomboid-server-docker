@@ -8,6 +8,12 @@ name: Lint
   # So it can be run against a branch before opening a pull request.
   workflow_dispatch:
 
+# A lint run that a newer push has already superseded answers a question nobody
+# is asking any more.
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

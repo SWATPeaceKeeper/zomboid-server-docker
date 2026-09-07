@@ -11,6 +11,13 @@ name: Test
     - cron: "0 3 * * *"
   workflow_dispatch:
 
+# The smoke job downloads roughly 7 GB and may run for an hour. Two pushes to the
+# same branch would pay that twice, and the first answer is worthless by
+# definition.
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
