@@ -1,0 +1,57 @@
+---
+name: Feature request
+description: Propose something this image should do and does not
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project adds no configuration speculatively — every environment
+        variable that exists is one somebody needed. So the useful part of this
+        form is the first field: what you were trying to do when you ran into
+        the gap.
+
+        Please open this before writing the code. It is a bad evening to spend
+        on a pull request that was never going to land.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: >
+        The situation, not the solution. What you were doing when the current
+        behaviour got in the way.
+      placeholder: |
+        I run two servers on one host and back both up with borgmatic. Each one
+        writes into its own volume, so borgmatic needs two separate...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like it to do
+      description: If you have a shape in mind, describe it. If not, say so.
+    validations:
+      required: false
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What you do today instead
+      description: >
+        A workaround that already works is useful information — sometimes it
+        turns out to be the right answer, and sometimes it shows the gap is
+        larger than it looked.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: >
+            This is about the Docker packaging, not about Project Zomboid
+            itself (game behaviour belongs with The Indie Stone)
+          required: true
