@@ -1,0 +1,18 @@
+---
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/SWATPeaceKeeper/zomboid-server-docker/security/advisories/new
+    about: >
+      Report it privately instead. Please do not open a public issue for
+      something that would let someone take over a running server.
+  - name: Project Zomboid itself
+    url: https://theindiestone.com/forums/
+    about: >
+      Game bugs, mod problems and server-side game behaviour belong with The
+      Indie Stone. This repository only packages the dedicated server.
+  - name: Troubleshooting and runbook
+    url: https://github.com/SWATPeaceKeeper/zomboid-server-docker/blob/main/docs/runbook.md
+    about: >
+      Mods that do not load, a container that never turns healthy, a hang at
+      "Router detection" - the common failures are documented with commands.

@@ -1,0 +1,109 @@
+---
+name: Bug report
+description: Something in this image or its scripts does not do what it says
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: the [Troubleshooting table][t] and the [runbook][r]
+        cover the failures that come up most often.
+
+        [t]: https://github.com/SWATPeaceKeeper/zomboid-server-docker#troubleshooting
+        [r]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/blob/main/docs/runbook.md
+
+        Bugs in Project Zomboid itself belong with [The Indie Stone](https://theindiestone.com/) —
+        this repository only packages the server.
+
+        For a security vulnerability, do not open an issue.
+        Use [private reporting](https://github.com/SWATPeaceKeeper/zomboid-server-docker/security/advisories/new).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead.
+      placeholder: |
+        The container never becomes healthy. `docker compose ps` shows it
+        restarting every few minutes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The smallest set of steps that shows it.
+      placeholder: |
+        1. docker compose up -d --build
+        2. Wait 20 minutes
+        3. docker compose ps
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Image and tag
+      description: >
+        Which image you are running. `docker inspect --format
+        '{{index .Config.Labels "org.opencontainers.image.revision"}}' pz-server`
+        gives the exact commit if you are on `latest` or `edge`.
+      placeholder: "ghcr.io/swatpeacekeeper/zomboid-server-docker:1.4.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: branch
+    attributes:
+      label: Game branch
+      options:
+        - "public (Build 42)"
+        - "legacy41 (Build 41)"
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: compose
+    attributes:
+      label: Your Compose file
+      description: >
+        The service definition you are running, with passwords removed.
+        This is usually the fastest way to spot the problem.
+      render: yaml
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: >
+        `docker compose logs --tail 100 pz-server`, or the sidecar if that is
+        what is failing. Check for passwords before pasting.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: host
+    attributes:
+      label: Host
+      description: >
+        OS, Docker version (`docker version`), RAM and free disk. Build 42
+        needs roughly 8 GB of RAM and 10 GB of disk.
+      placeholder: |
+        Ubuntu 24.04, Docker 28.1.1, 16 GB RAM, 120 GB free
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: mods
+    attributes:
+      label: Mods
+      options:
+        - label: The server runs Steam Workshop mods
+          required: false
+        - label: I have reproduced this with no mods loaded
+          required: false
