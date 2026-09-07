@@ -132,3 +132,10 @@ docker inspect -f '{{.State.Health.Status}}' pz-server
 
 The health `start_period` is 15 minutes so that a first boot is not counted as a
 failure.
+
+The backup sidecar deliberately has no healthcheck. Its liveness is monitored
+through the age of `pz_backup_last_run_timestamp_seconds` and
+`pz_backup_last_success_timestamp_seconds`, which the exporter publishes and the
+Grafana dashboard alerts on. That reports on the outcome of backups rather than
+on the process that takes them, and a sidecar that is perfectly alive while
+producing nothing is exactly the failure a healthcheck would call healthy.
