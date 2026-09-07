@@ -614,6 +614,31 @@ the volume.
 
 See [CHANGELOG.md](CHANGELOG.md) for what changed between versions.
 
+### Verifying an image
+
+Every published image is signed by the release workflow and carries build
+provenance and an SBOM. The signature is keyless: it is bound to this
+repository's workflow identity and recorded in the public transparency log,
+which is why the command below asks who signed rather than for a key.
+
+```bash
+cosign verify ghcr.io/swatpeacekeeper/zomboid-server-docker:latest \
+  --certificate-identity-regexp '^https://github\.com/SWATPeaceKeeper/zomboid-server-docker/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+The attestations, including the SBOM:
+
+```bash
+cosign download attestation ghcr.io/swatpeacekeeper/zomboid-server-docker:latest
+docker buildx imagetools inspect ghcr.io/swatpeacekeeper/zomboid-server-docker:latest \
+  --format '{{ json .Provenance }}'
+```
+
+None of this is required in order to run the images. It is here so that "it
+comes from this repository" is something the registry can prove rather than
+something this README asserts.
+
 ### How this is tested
 
 - **Unit tests** (`bats`) cover the shell libraries as behaviour: INI patching

@@ -11,6 +11,15 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Added
 
+- **Published images carry build provenance, an SBOM and a signature.** Until
+  now nobody pulling `ghcr.io/swatpeacekeeper/zomboid-server-docker:1` could
+  verify it was built by this repository's pipeline from the commit it claims:
+  the OCI labels record `source` and `revision`, but a label is a string anybody
+  can write. The build now attaches SLSA provenance (`mode=max`) and an SPDX
+  SBOM, and the release workflow signs each image by digest with keyless cosign,
+  so the signature is bound to this repository's workflow identity and recorded
+  in the public transparency log. The README's Images and versioning section has
+  the `cosign verify` command.
 - **The published images are scanned again every night.** Trivy ran once, at
   publish time, and never looked at the image afterwards, so a vulnerability
   disclosed the week after a release stayed invisible for as long as that
