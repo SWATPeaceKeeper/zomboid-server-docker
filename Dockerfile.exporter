@@ -20,6 +20,15 @@ RUN go build -trimpath -ldflags="-s -w" -o /out/pz-exporter .
 #
 # The trade is that there is no shell to exec into. The container's job is to
 # answer /metrics, and whether it does is visible from outside it.
+#
+# The second trade only appears the day someone needs it: there is no CA bundle
+# either. Nothing here speaks TLS — plain TCP to RCON, plain HTTP on /metrics —
+# so the first outbound HTTPS call anyone adds fails with "x509: certificate
+# signed by unknown authority", which reads like a broken CA store rather than an
+# absent one, in a container with no shell to look around in. Adding such a call
+# means adding the bundle with it:
+#
+#   COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 FROM scratch
 
 LABEL org.opencontainers.image.title="Project Zomboid metrics exporter" \
