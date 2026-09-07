@@ -40,12 +40,18 @@ jobs:
           find scripts tests -name '*.sh' -print0 \
             | xargs -0 docker run --rm -v "${PWD}:/mnt" -w /mnt "${SHFMT_IMAGE}" -i 2 -d
 
+      # Derived, not listed. The list this replaces had been missing
+      # Dockerfile.exporter since the file was added, and a hand-maintained list
+      # would lose the next one the same way. Every Dockerfile is linted before
+      # the step fails, so one finding does not hide the others.
       - name: Lint Dockerfiles
         run: |
-          for dockerfile in Dockerfile Dockerfile.backup tests/Dockerfile; do
+          status=0
+          while IFS= read -r -d '' dockerfile; do
             echo "== ${dockerfile}"
-            docker run --rm -i "${HADOLINT_IMAGE}" hadolint - <"${dockerfile}"
-          done
+            docker run --rm -i "${HADOLINT_IMAGE}" hadolint - <"${dockerfile}" || status=1
+          done < <(find . -name 'Dockerfile*' -not -path './.git/*' -print0 | sort -z)
+          exit "${status}"
 
       # Run from the same pinned toolchain the release build uses, so a finding
       # here cannot differ from one in the image.
