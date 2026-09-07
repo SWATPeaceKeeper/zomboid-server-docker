@@ -108,7 +108,11 @@ Also worth knowing:
 
 - **Passwords are passed as environment variables.** They are therefore visible
   in `docker inspect` and to anything that can reach the Docker socket. Treat
-  access to the Docker socket as equivalent to admin on the game server.
+  access to the Docker socket as equivalent to admin on the game server. The
+  RCON password additionally appears in the process list *inside* the container,
+  because the RCON client takes it as an argument — so a `ps aux` from a
+  container shell is worth the same care as the environment itself, and is worth
+  redacting before it goes into a bug report.
 - **`pz_player_info` exports player names as Prometheus labels.** On a public
   server that is both a cardinality problem and a privacy one — set
   `PZ_EXPORT_PLAYER_NAMES=false`.
