@@ -7,6 +7,16 @@ name: Release
     tags: ["v*"]
   workflow_dispatch:
 
+# Queued, never cancelled — `cancel-in-progress: false` is deliberate. The three
+# images are pushed by three matrix jobs of very different sizes, so a run killed
+# part way through would leave `edge` naming a set of images that were never
+# built from one commit. Serialising also stops two pushes in quick succession
+# from racing for the same tag, where the slower build wins and the newer commit
+# loses.
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: false
+
 # Granted per job rather than here: only `publish` needs to write packages, and
 # `verify-published` only needs to read one back.
 permissions:
