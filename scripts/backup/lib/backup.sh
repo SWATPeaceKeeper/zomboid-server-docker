@@ -116,15 +116,30 @@ backup_notify() {
   if [ "${status}" = "failure" ]; then
     priority="high"
   fi
-  # The token expansion is intentionally unquoted so it disappears entirely when
-  # NTFY_TOKEN is unset, rather than passing an empty argument.
-  # shellcheck disable=SC2086
-  curl -fsS --max-time 10 \
+  # An array, which is how command lines are built everywhere else here. The
+  # unquoted ${NTFY_TOKEN:+-H "..."} this replaces was not actually broken: bash
+  # honours the quotes inside the expansion, so a token containing a space or a
+  # star was never split or globbed. It needed a `shellcheck disable=SC2086` to
+  # say so, and a suppression that is correct for a reason nobody can check at a
+  # glance costs more than the four lines below. An empty array expands to
+  # nothing under set -u, so the argument still disappears when the token is
+  # unset.
+  local auth=()
+  if [ -n "${NTFY_TOKEN:-}" ]; then
+    auth=(-H "Authorization: Bearer ${NTFY_TOKEN}")
+  fi
+
+  # curl's stderr goes into the warning rather than to /dev/null. A rejected
+  # token and an unreachable host used to log the same sentence, which is the
+  # least useful moment to have to guess.
+  local error
+  if ! error="$(curl -fsS --max-time 10 \
     -H "Title: Project Zomboid backup ${status}" \
     -H "Priority: ${priority}" \
-    ${NTFY_TOKEN:+-H "Authorization: Bearer ${NTFY_TOKEN}"} \
+    "${auth[@]}" \
     -d "${message}" \
-    "${NTFY_URL}" >/dev/null 2>&1 ||
-    log_warn "Could not send the ntfy notification"
+    "${NTFY_URL}" 2>&1 >/dev/null)"; then
+    log_warn "Could not send the ntfy notification: ${error}"
+  fi
   return 0
 }

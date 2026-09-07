@@ -190,6 +190,45 @@ teardown() {
   [ "$status" -eq 0 ]
 }
 
+@test "backup_notify sends a token containing a space as one header" {
+  NTFY_URL="http://ntfy.invalid/topic"
+  NTFY_TOKEN="tk_one two"
+  export NTFY_URL NTFY_TOKEN
+  # Stands in for the real curl, which backup_notify calls by name.
+  # shellcheck disable=SC2329
+  curl() { printf '%s\n' "$@" >"${TEST_TMP}/curl-args"; }
+
+  run backup_notify "success" "done"
+  [ "$status" -eq 0 ]
+  grep -Fxq "Authorization: Bearer tk_one two" "${TEST_TMP}/curl-args"
+}
+
+@test "backup_notify sends no authorization header when the token is unset" {
+  NTFY_URL="http://ntfy.invalid/topic"
+  export NTFY_URL
+  unset NTFY_TOKEN
+  # shellcheck disable=SC2329
+  curl() { printf '%s\n' "$@" >"${TEST_TMP}/curl-args"; }
+
+  run backup_notify "success" "done"
+  [ "$status" -eq 0 ]
+  run ! grep -q "Authorization" "${TEST_TMP}/curl-args"
+}
+
+@test "backup_notify says why the notification failed" {
+  NTFY_URL="http://ntfy.invalid/topic"
+  export NTFY_URL
+  # shellcheck disable=SC2329
+  curl() {
+    echo "curl: (22) The requested URL returned error: 401" >&2
+    return 22
+  }
+
+  run backup_notify "failure" "something broke"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"401"* ]]
+}
+
 @test "backup-now writes a status file on success" {
   PZ_DATA_DIR="${DATA_DIR}" BACKUP_DIR="${BACKUP_DIR}" BACKUP_MODE="tar" \
     run "${REPO_ROOT}/scripts/backup/backup-now.sh"
