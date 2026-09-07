@@ -9,6 +9,17 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+### Added
+
+- `tests/check-lint-versions.sh` fails when a linter version in
+  `.pre-commit-config.yaml` and its counterpart in the `env:` block of
+  `.github/workflows/lint.yml` disagree. Both files said they were kept in step
+  and nothing checked it, while Renovate only ever updates the pre-commit side —
+  so its next hook update would have moved one and left the other behind, which
+  is exactly the drift the rule exists to prevent. It also fails on a pin in the
+  workflow it has not been told about, so a tool added to CI cannot quietly
+  escape the comparison. Runs in CI and as a pre-commit hook.
+
 ### Fixed
 
 - **Workflow runs were not serialised.** Two pushes to `main` in quick

@@ -36,6 +36,11 @@ jobs:
         with:
           persist-credentials: false
 
+      # First, because a mismatch here explains any finding below that the same
+      # tool does not report locally.
+      - name: Check the linter versions against .pre-commit-config.yaml
+        run: ./tests/check-lint-versions.sh
+
       - name: Run shellcheck
         run: |
           find scripts tests -name '*.sh' -print0 \

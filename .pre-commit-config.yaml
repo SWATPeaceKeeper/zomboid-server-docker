@@ -32,3 +32,15 @@ repos:
     hooks:
       - id: yamllint
         args: ["-c", ".yamllint"]
+
+  # The versions above and the ones in .github/workflows/lint.yml are the same
+  # versions on purpose, and Renovate only updates these. Runs whenever either
+  # side moves, so its update lands red here instead of quietly in CI.
+  - repo: local
+    hooks:
+      - id: lint-versions
+        name: linter versions agree with CI
+        language: system
+        entry: tests/check-lint-versions.sh
+        pass_filenames: false
+        files: ^(\.pre-commit-config\.yaml|\.github/workflows/lint\.yml)$

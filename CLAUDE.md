@@ -63,7 +63,8 @@ discussion, not a refactor.
 8. **Linter versions in `.pre-commit-config.yaml` and the `env:` block of
    `.github/workflows/lint.yml` must stay identical.** A linter that reports
    differently locally than in CI turns every finding into an argument about
-   which run to believe. Change both or neither.
+   which run to believe. Change both or neither —
+   `tests/check-lint-versions.sh` fails the build if you change one.
 9. **No speculative configuration.** Every environment variable that exists is
    one somebody needed. New ones need a reason beyond "someone might".
 
@@ -106,6 +107,7 @@ find scripts tests -name '*.sh' -print0 \
 docker run --rm -i hadolint/hadolint:v2.15.1 hadolint - < Dockerfile
 yamllint -c .yamllint .
 zizmor --persona=regular .github/workflows/
+./tests/check-lint-versions.sh   # enforces non-negotiable 8, below
 ```
 
 Zero warnings. If one genuinely cannot be fixed, add an inline ignore with a
