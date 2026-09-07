@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Shared helpers for the bats suite.
 
+# `run !` and the other run flags are only guaranteed from bats 1.5.0. Without
+# this declaration bats warns once per use, and a suite that prints warnings is
+# one where the next real warning goes unread.
+bats_require_minimum_version 1.5.0
+
 REPO_ROOT="${REPO_ROOT:-/code}"
 export REPO_ROOT
 
