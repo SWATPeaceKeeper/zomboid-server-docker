@@ -5,6 +5,13 @@
     ":dependencyDashboard"
   ],
   "minimumReleaseAge": "7 days",
+  "description": [
+    "ignorePaths replaces the list config:best-practices inherits through :ignoreModulesAndTests, which excludes **/tests/**. That hid tests/Dockerfile, and with it the bats image the whole test suite runs in, from every update Renovate has ever proposed. node_modules and vendor are kept because those are generated trees; tests are code."
+  ],
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/vendor/**"
+  ],
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
