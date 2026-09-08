@@ -76,6 +76,13 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   promises the opposite in as many words. Only the exporter joins now; the
   server does so through the new `docker-compose.monitoring-jvm.yml`, which is
   what `PZ_JMX_METRICS=true` actually needs, and which says what it costs.
+- **Renovate never saw anything under `tests/`.** `config:best-practices`
+  inherits `:ignoreModulesAndTests`, whose `ignorePaths` excludes `**/tests/**`,
+  so `tests/Dockerfile` — and with it `bats/bats`, the image the entire test
+  suite runs in — was invisible to every update Renovate has proposed. It showed
+  up as a dependency-pinning pull request that touched three of the four
+  Dockerfiles. `ignorePaths` is now set here rather than inherited: generated
+  trees stay ignored, tests do not.
 - **CI's shellcheck and shfmt runs skipped the bats suite.** Both matched
   `*.sh`, while the pre-commit hooks match shell by type and have always covered
   `tests/unit/*.bats`. A local hook stricter than CI is the same problem as a
