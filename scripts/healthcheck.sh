@@ -25,7 +25,11 @@ if ! pgrep -f "ProjectZomboid" >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! ss -lun 2>/dev/null | grep -q ":${GAME_PORT}"; then
+# `grep … >/dev/null`, not `grep -q …`. `ss` output here is a handful of lines,
+# so -q could not realistically outrun it — but the pattern is the one that made
+# the stack test report a metric as missing while printing it, and a false
+# "unhealthy" restarts a server. No reason to keep the trap.
+if ! ss -lun 2>/dev/null | grep ":${GAME_PORT}" >/dev/null; then
   echo "UDP port ${GAME_PORT} is not bound"
   exit 1
 fi

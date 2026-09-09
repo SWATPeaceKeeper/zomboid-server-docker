@@ -68,6 +68,15 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Fixed
 
+- **The stack test could report a metric as missing while printing it.**
+  `printf '%s' "${body}" | grep -q PATTERN` under `set -o pipefail` returns
+  failure when the pattern is found early: `grep -q` exits at the first match,
+  `printf` dies with EPIPE on its next write, and `pipefail` promotes that to
+  the pipeline's status. It needs a body larger than one write to trigger, so it
+  stayed hidden until the JMX output grew — the scheduled run then failed with
+  "No jvm heap metrics" while listing `jvm_memory_used_bytes` in its own
+  diagnostics. Every such check is now a here-string, and the pipelines fed by a
+  command let `grep` read to the end instead of using `-q`.
 - **The monitoring overlay put RCON on the shared monitoring network.**
   `docker-compose.monitoring.yml` joined `pz-server` to that network
   unconditionally, so port 27015 — full administration of the game server — and
