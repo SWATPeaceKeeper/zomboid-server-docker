@@ -6,9 +6,16 @@ name: Test
   push:
     branches: [main]
   schedule:
-    # Nightly, to catch a Project Zomboid update breaking the image before a
-    # deployment does.
-    - cron: "0 3 * * *"
+    # Weekly, Monday morning, to catch a Project Zomboid update breaking the
+    # image before a deployment does.
+    #
+    # This was nightly. The run downloads roughly 7 GB and occupies a runner for
+    # up to an hour, and it was doing that seven times a week for a handful of
+    # deployments - a cost that only makes sense if somebody acts on the result
+    # the next morning. Weekly still catches a breaking game update well before
+    # the next release, and `workflow_dispatch` covers the case where you want
+    # an answer now.
+    - cron: "0 3 * * 1"
   workflow_dispatch:
 
 # The smoke job downloads roughly 7 GB and may run for an hour. Two pushes to the

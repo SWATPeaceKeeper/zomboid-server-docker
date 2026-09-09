@@ -59,7 +59,8 @@ Run both for any change. They are cheap and they catch most of what goes wrong.
 ```
 
 Run one of these if you touched the entrypoint, a Dockerfile or the Compose
-file. Otherwise let CI do it — it runs both on every pull request, and nightly.
+file. Otherwise let CI do it — it runs both on every pull request, and once a
+week on a schedule.
 
 Go tests, through the same pinned toolchain the release build uses:
 

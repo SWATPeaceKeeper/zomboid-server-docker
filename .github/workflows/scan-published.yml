@@ -13,8 +13,14 @@ name: Scan published
 # would make both harder to read.
 "on":
   schedule:
-    # Two hours after the nightly Test run, so a failure of either is easy to
-    # attribute without reading timestamps.
+    # Nightly, and deliberately more often than the weekly Test run: this job
+    # pulls three images and scans them in about a minute, while Test downloads
+    # 7 GB and can take an hour. What it watches for also arrives on its own
+    # schedule - a CVE is disclosed when it is disclosed - so the delay between
+    # disclosure and knowing is the whole value.
+    #
+    # 05:00 leaves the earlier slot to Test on the day they coincide, so a
+    # failure is easy to attribute without reading timestamps.
     - cron: "0 5 * * *"
   workflow_dispatch:
 

@@ -17,10 +17,10 @@ Three things set this apart from the other images:
 - **Shutdown saves the world.** `docker stop` makes the entrypoint send `quit` to
   the server console and wait for the save to finish. Letting Docker kill the JVM
   instead is how Project Zomboid worlds get corrupted.
-- **CI starts a real server.** Every change and every night, a server is
-  installed, booted, saved over RCON and stopped, and the published image is
-  pulled back and booted again. A red `Test` badge means the game broke the
-  image — before your next deploy finds out.
+- **CI starts a real server.** On every change, and once a week on a schedule, a
+  server is installed, booted, saved over RCON and stopped, and the published
+  image is pulled back and booted again. A red `Test` badge means the game broke
+  the image — before your next deploy finds out.
 
 ## Contents
 
@@ -671,8 +671,10 @@ something this README asserts.
   over RCON, stops it and asserts a clean exit with a written world.
 - **The release pipeline pulls back the image it just pushed** and runs that same
   smoke test against it, so the artefact you download is the one proven to boot.
-- **It all runs nightly**, so a Project Zomboid update that breaks the image
-  shows up on the badge instead of in your deployment.
+- **It all runs weekly**, so a Project Zomboid update that breaks the image
+  shows up on the badge instead of in your deployment. The published images are
+  scanned for new vulnerabilities every night, which is cheap; booting a real
+  server is not, and a game update that breaks it is not an hourly event.
 
 ## Credits
 

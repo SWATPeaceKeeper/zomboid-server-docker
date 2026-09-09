@@ -57,6 +57,14 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Changed
 
+- **The scheduled end-to-end test runs weekly instead of nightly**, Monday
+  mornings. It downloads roughly 7 GB and holds a runner for up to an hour;
+  doing that seven times a week only pays off if somebody acts on the result the
+  next morning. A game update that breaks the image is still caught well before
+  the next release, and `workflow_dispatch` covers wanting an answer now. The
+  nightly vulnerability scan of the published images is unchanged: it costs a
+  minute, and the delay between a CVE being disclosed and being noticed is the
+  entire point of it.
 - The server's console FIFO is created with mode 0600 instead of the image's
   default 0644. Anything able to write to it issues console commands on the
   server; only uid 1000 exists in the container, so this closes an intent gap
