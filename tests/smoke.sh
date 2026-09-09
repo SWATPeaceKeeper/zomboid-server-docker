@@ -76,7 +76,11 @@ if [ "${exit_code}" != "0" ]; then
   exit 1
 fi
 
-if ! docker logs "${CONTAINER}" 2>&1 | grep -q "Server stopped cleanly"; then
+# `grep … >/dev/null`, not `grep -q …`: -q exits at the first match, `docker
+# logs` then dies with EPIPE, and pipefail makes that the status of the check.
+# A whole server boot is far more than one write, so the race is not theoretical
+# here. See the longer note in tests/stack-smoke.sh.
+if ! docker logs "${CONTAINER}" 2>&1 | grep "Server stopped cleanly" >/dev/null; then
   echo "!! Shutdown handler did not report a clean stop" >&2
   exit 1
 fi

@@ -76,7 +76,10 @@ fetch_metrics() {
 
 # The Compose file pins container names, so a stack that is already up would
 # collide and the failure would look like a bug in this test.
-if docker ps --all --format '{{.Names}}' | grep -qx 'pz-server'; then
+#
+# `grep … >/dev/null` rather than `grep -q …` for the same reason as the
+# here-strings further down: -q can kill the command feeding it.
+if docker ps --all --format '{{.Names}}' | grep -x 'pz-server' >/dev/null; then
   echo "!! A container named pz-server already exists. Stop it first." >&2
   exit 1
 fi
@@ -115,13 +118,20 @@ echo "==> Taking a backup against the running server"
 backup_output="$(docker compose exec -T pz-backup backup-now 2>&1)"
 printf '%s\n' "${backup_output}"
 
-if ! printf '%s' "${backup_output}" | grep -q "Server acknowledged the save command"; then
+# A here-string, never `printf … | grep -q …`. With -q, grep exits at the first
+# match, the producer's next write dies with EPIPE, and `set -o pipefail` turns
+# that into the pipeline's status — so the check reports "not found" precisely
+# when the pattern was found. It only bites once the body takes more than one
+# write, which is why it hid until the JMX metrics grew: a nightly run failed
+# with "No jvm heap metrics" while listing jvm_memory_used_bytes in its own
+# diagnostics two lines further down. A here-string has no pipeline to break.
+if ! grep -q "Server acknowledged the save command" <<<"${backup_output}"; then
   echo "!! The sidecar could not reach the server over RCON." >&2
   echo "!! The backup would be missing the most recent changes." >&2
   exit 1
 fi
 
-if ! printf '%s' "${backup_output}" | grep -q "INFO: Created "; then
+if ! grep -q "INFO: Created " <<<"${backup_output}"; then
   echo "!! The sidecar reported no archive." >&2
   exit 1
 fi
@@ -141,13 +151,13 @@ echo "==> Checking the exporter answers against the live server"
 # network, which is how Prometheus will reach it.
 metrics="$(fetch_metrics http://pz-exporter:9401/metrics)"
 
-if ! printf '%s' "${metrics}" | grep -qE '^pz_up 1$'; then
+if ! grep -qE '^pz_up 1$' <<<"${metrics}"; then
   echo "!! pz_up is not 1; the exporter cannot reach the server over RCON" >&2
   printf '%s\n' "${metrics}" | grep -E '^pz_' >&2
   exit 1
 fi
 
-if ! printf '%s' "${metrics}" | grep -qE '^pz_players_online 0$'; then
+if ! grep -qE '^pz_players_online 0$' <<<"${metrics}"; then
   echo "!! pz_players_online missing or not zero on an empty server" >&2
   printf '%s\n' "${metrics}" | grep -E '^pz_' >&2
   exit 1
@@ -155,13 +165,13 @@ fi
 
 # The valuable one: it proves the sidecar and the exporter agree about a backup
 # that really happened moments ago in this same run.
-if ! printf '%s' "${metrics}" | grep -q '^pz_backup_last_success_timestamp_seconds '; then
+if ! grep -q '^pz_backup_last_success_timestamp_seconds ' <<<"${metrics}"; then
   echo "!! the exporter did not see the backup taken moments ago" >&2
   printf '%s\n' "${metrics}" | grep -E '^pz_' >&2
   exit 1
 fi
 
-if ! printf '%s' "${metrics}" | grep -q '^pz_server_info{build_id='; then
+if ! grep -q '^pz_server_info{build_id=' <<<"${metrics}"; then
   echo "!! the exporter could not read the steam build id" >&2
   printf '%s\n' "${metrics}" | grep -E '^pz_' >&2
   exit 1
@@ -180,7 +190,7 @@ jvm_metrics="$(fetch_metrics http://pz-server:9404/metrics)" || jvm_rc=$?
 # Java client renamed it between 0.x and 1.x. Both are checked so that a future
 # rename fails with a clear message rather than looking like a broken agent.
 if [ "${jvm_rc}" -ne 0 ] ||
-  ! printf '%s' "${jvm_metrics}" | grep -qE '^jvm_memory_(used_bytes|bytes_used)'; then
+  ! grep -qE '^jvm_memory_(used_bytes|bytes_used)' <<<"${jvm_metrics}"; then
   if [ "${jvm_rc}" -ne 0 ]; then
     echo "!! pz-server:9404 never served a complete response." >&2
   else
@@ -229,7 +239,7 @@ if [ "${exit_code}" != "0" ]; then
   exit 1
 fi
 
-if ! docker compose logs pz-server 2>&1 | grep -q "Server stopped cleanly"; then
+if ! docker compose logs pz-server 2>&1 | grep "Server stopped cleanly" >/dev/null; then
   echo "!! The shutdown handler did not report a clean stop" >&2
   exit 1
 fi
