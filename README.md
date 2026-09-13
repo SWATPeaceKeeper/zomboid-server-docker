@@ -67,10 +67,13 @@ name: zomboid
 
 services:
   pz-server:
-    image: ghcr.io/swatpeacekeeper/zomboid-server-docker:1
+    image: ghcr.io/swatpeacekeeper/zomboid-server-docker:2
     container_name: pz-server
     restart: unless-stopped
     stop_grace_period: 180s
+    # Heap plus the ~3 GB Build 42 uses outside it. Raise both together, or the
+    # container refuses to start and says which number to change.
+    mem_limit: "9g"
     environment:
       SERVER_NAME: "myserver"
       PUBLIC_NAME: "Our Apocalypse"
@@ -90,7 +93,7 @@ services:
     security_opt: [no-new-privileges:true]
 
   pz-backup:
-    image: ghcr.io/swatpeacekeeper/zomboid-server-docker-backup:1
+    image: ghcr.io/swatpeacekeeper/zomboid-server-docker-backup:2
     container_name: pz-backup
     restart: unless-stopped
     depends_on: [pz-server]
@@ -607,9 +610,9 @@ More, with commands: [`docs/runbook.md`](docs/runbook.md).
 
 | Tag | Meaning | Use it when |
 |---|---|---|
-| `1.4.2` | An exact release | You want a specific version and no surprises |
-| `1.4` | Newest patch of that minor | You want fixes but no new behaviour |
-| `1` | Newest release of that major | You accept new features, not breaking changes |
+| `2.0.1` | An exact release | You want a specific version and no surprises |
+| `2.0` | Newest patch of that minor | You want fixes but no new behaviour |
+| `2` | Newest release of that major | You accept new features, not breaking changes |
 | `latest` | Newest release | You want the current version |
 | `edge` | Current `main` | You are testing unreleased changes |
 | `sha-<commit>` | One exact commit | You need to pin something down precisely |

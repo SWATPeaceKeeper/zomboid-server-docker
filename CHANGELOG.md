@@ -9,6 +9,30 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-13
+
+### Upgrading
+
+**If you use the bundled `docker-compose.yml` and have raised `PZ_MAX_RAM`, set
+`PZ_MEM_LIMIT` with it.** The Compose file now caps the server container at
+`PZ_MEM_LIMIT`, `7g` by default, and the entrypoint refuses to start when that
+limit cannot hold the heap plus the roughly 3 GB Build 42 uses outside it. The
+message names both numbers:
+
+```
+[pz] ERROR: This container may use 7 GiB, but PZ_MAX_RAM=8g needs about 11 GiB …
+```
+
+Rule of thumb: `PZ_MEM_LIMIT` = `PZ_MAX_RAM` + 3 GB.
+
+The same applies if you run your own Compose file and already set a memory limit
+there that is tighter than that sum. If you set no limit at all, nothing
+changes: with nothing to compare against, the check does nothing.
+
+Everything else in this release is backwards compatible. Deployments that only
+want the security fix and not this behaviour can stay on `:1`, which now points
+at 1.2.1.
+
 ### Added
 
 - **Published images carry build provenance, an SBOM and a signature.** Until
@@ -144,6 +168,14 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   now check the exit status and retry a slow scrape, and the failure message says
   which of the two problems actually occurred.
 
+## [1.2.1] - 2026-09-13
+
+Released from `release/1.2.x` and containing only one change: the backup image's
+base packages are patched at build time, which clears the 13 fixable
+HIGH/CRITICAL findings described under 2.0.0. It exists so that deployments
+pinned to `:1` or `:1.2` can take that fix without the behaviour changes in
+2.0.0.
+
 ## [1.2.0] - 2026-09-06
 
 ### Added
@@ -266,7 +298,9 @@ nightly.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.1...v2.0.0
+[1.2.1]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.0.0...v1.1.0
