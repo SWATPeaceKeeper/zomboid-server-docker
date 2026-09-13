@@ -640,16 +640,15 @@ identity and recorded in the public transparency log, which is why the command
 below asks who signed rather than for a key.
 
 ```bash
-cosign verify ghcr.io/swatpeacekeeper/zomboid-server-docker:edge \
+cosign verify ghcr.io/swatpeacekeeper/zomboid-server-docker:latest \
   --certificate-identity-regexp '^https://github\.com/SWATPeaceKeeper/zomboid-server-docker/' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
-**Which images carry it:** everything built since signing was introduced, which
-today means `edge` and `sha-<commit>`. `latest` and the version tags get theirs
-with the next release — until then `cosign verify` on those answers `no
-signatures found`, because there is nothing to find rather than because
-something is wrong.
+**Which images carry it:** everything from 2.0.0 onwards, plus `edge` and
+`sha-<commit>`. Releases before that — 1.2.1 and older — were built by a pipeline
+that did not sign, so `cosign verify` on those answers `no signatures found`,
+because there is nothing to find rather than because something is wrong.
 
 The attestations, including the SBOM:
 
