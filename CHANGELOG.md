@@ -9,6 +9,20 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-13
+
+### Fixed
+
+- **The backup sidecar shipped 13 fixable HIGH/CRITICAL vulnerabilities**, in
+  `perl-base`, `gzip`, `libsqlite3-0`, `libpcre2-8-0` and `libssh2-1t64`. They
+  live in the pinned `debian:13-slim` snapshot, and Debian had published fixes
+  for all of them without the `13-slim` tag being rebuilt — so there was no newer
+  digest to move to, and rebuilding unchanged produced the same 13 findings. The
+  runtime stage now runs `apt-get upgrade` before installing anything.
+
+  This release contains nothing else. It exists so that deployments pinned to
+  `:1` or `:1.2` get the fix without also taking the behaviour changes in 2.0.0.
+
 ## [1.2.0] - 2026-09-06
 
 ### Added
@@ -131,7 +145,8 @@ nightly.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.0.0...v1.1.0

@@ -20,8 +20,15 @@ LABEL org.opencontainers.image.title="Project Zomboid backup sidecar" \
   org.opencontainers.image.licenses="GPL-3.0-or-later" \
   org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/zomboid-server-docker"
 
+# `apt-get upgrade` before installing anything: the pinned base digest is a
+# snapshot, and Debian publishes security updates for packages inside it long
+# before the `13-slim` tag is rebuilt. Without this, a rebuild ships the same
+# vulnerable perl-base, gzip, libsqlite3 and libssh2 the snapshot had, and the
+# only cure is waiting for someone else to move the tag.
+#
 # hadolint ignore=DL3008
 RUN apt-get update \
+  && apt-get upgrade -y \
   && apt-get install -y --no-install-recommends \
   ca-certificates \
   curl \
