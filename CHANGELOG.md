@@ -76,6 +76,15 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Fixed
 
+- **The backup sidecar shipped 13 fixable HIGH/CRITICAL vulnerabilities**, in
+  `perl-base`, `gzip`, `libsqlite3-0`, `libpcre2-8-0` and `libssh2-1t64`. The
+  nightly scan of the published images found them on 2026-09-13 — the first real
+  catch since that job was added. They live in the pinned `debian:13-slim`
+  snapshot, and Debian had published fixes for all of them without the `13-slim`
+  tag being rebuilt, so there was no newer digest to move to and a plain rebuild
+  produced the same 13 findings. The runtime stage now runs `apt-get upgrade`
+  before installing anything, which takes the base's own packages to the
+  archive's current state.
 - **The stack test could report a metric as missing while printing it.**
   `printf '%s' "${body}" | grep -q PATTERN` under `set -o pipefail` returns
   failure when the pattern is found early: `grep -q` exits at the first match,
