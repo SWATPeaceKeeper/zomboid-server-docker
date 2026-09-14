@@ -10,9 +10,11 @@ setup() {
   source "${REPO_ROOT}/scripts/backup/lib/backup.sh"
   DATA_DIR="${TEST_TMP}/zomboid"
   BACKUP_DIR="${TEST_TMP}/backups"
-  mkdir -p "${DATA_DIR}/Saves/Multiplayer/servertest" "${DATA_DIR}/Server" "${BACKUP_DIR}"
+  mkdir -p "${DATA_DIR}/Saves/Multiplayer/servertest" "${DATA_DIR}/Server" \
+    "${DATA_DIR}/db" "${BACKUP_DIR}"
   echo "world data" >"${DATA_DIR}/Saves/Multiplayer/servertest/map.bin"
   echo "Public=false" >"${DATA_DIR}/Server/servertest.ini"
+  echo "accounts" >"${DATA_DIR}/db/servertest.db"
   unset NTFY_URL
 }
 
@@ -63,6 +65,32 @@ teardown() {
   [ -d "$output" ]
   [ -f "${output}/Saves/Multiplayer/servertest/map.bin" ]
   [ -f "${output}/Server/servertest.ini" ]
+}
+
+# Without the account database a restored world has no user accounts at all:
+# the entrypoint sees no db/<name>.db, calls it a first boot, and only the admin
+# comes back - from ADMIN_PASSWORD. Found by running the restore for real.
+@test "backup_create includes the account database in tar mode" {
+  local archive
+  archive="$(backup_create "${DATA_DIR}" "${BACKUP_DIR}" "tar")"
+  run tar --use-compress-program=zstd -tf "${archive}"
+  [[ "$output" == *"db/servertest.db"* ]]
+}
+
+@test "backup_create includes the account database in dir mode" {
+  run backup_create "${DATA_DIR}" "${BACKUP_DIR}" "dir"
+  [ "$status" -eq 0 ]
+  [ -f "${output}/db/servertest.db" ]
+}
+
+# A server that has never been started has Saves but no db yet, and that must
+# still produce a backup rather than failing on the missing directory.
+@test "backup_create works when there is no account database yet" {
+  rm -rf "${DATA_DIR}/db"
+  run backup_create "${DATA_DIR}" "${BACKUP_DIR}" "dir"
+  [ "$status" -eq 0 ]
+  [ -d "${output}/Saves" ]
+  [ ! -e "${output}/db" ]
 }
 
 @test "backup_create fails on an unknown mode" {

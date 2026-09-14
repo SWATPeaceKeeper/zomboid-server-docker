@@ -42,6 +42,21 @@ backup_create() {
     sources+=("Server")
   fi
 
+  # db/ holds the user accounts. Leaving it out was found by running the restore
+  # rather than reading about it: a restored world has no db/<name>.db, so the
+  # entrypoint treats the start as a first boot and recreates the admin from
+  # ADMIN_PASSWORD. Every other player has to register again, and because
+  # characters are keyed by name in Saves/players.db, whoever claims a name first
+  # inherits that name's character.
+  #
+  # It is SQLite and the server may be writing when the copy happens, so the
+  # database can be slightly behind the world. That is the right trade: accounts
+  # change rarely, the world changes every minute, and a stale account list beats
+  # no account list.
+  if [ -d "${data_dir}/db" ]; then
+    sources+=("db")
+  fi
+
   stamp="$(date -u +%Y%m%d-%H%M%S)"
   mkdir -p "${backup_dir}"
 

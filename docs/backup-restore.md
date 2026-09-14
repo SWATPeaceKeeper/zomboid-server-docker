@@ -4,11 +4,26 @@
 
 From the data volume (`/data/zomboid`):
 
-- `Saves/` — the world itself, including player data
+- `Saves/` — the world itself, including the characters in `players.db`
 - `Server/` — `<name>.ini`, `<name>_SandboxVars.lua`, `<name>_spawnregions.lua`
+- `db/` — the user accounts, when the server has created it
 
 Not backed up: the Steam installation and the downloaded Workshop content. Both
 are re-downloadable and would multiply the size of every archive for nothing.
+Neither are the logs, `options.ini` or the runtime directories the server
+recreates by itself.
+
+`db/` and `Saves/` answer different questions, and a restore needs both.
+Characters live in `Saves/players.db` and are keyed by account name; the accounts
+themselves live in `db/<name>.db`. Restoring without the account database leaves
+a server where nobody can log in: the entrypoint finds no `db/<name>.db`, treats
+the start as a first boot, recreates the admin from `ADMIN_PASSWORD`, and every
+other player has to register again — with whoever claims a name first inheriting
+that name's character.
+
+The account database is SQLite and is copied while the server runs, so it can be
+marginally behind. Accounts change rarely and the world changes constantly, so a
+slightly stale account list is the better of the two failure modes.
 
 ## When backups happen
 
@@ -83,7 +98,31 @@ Then borgmatic backs up `/srv/pz-backups` like any other directory, and
 ## Restore
 
 **Try this once before you need it.** A restore procedure that has never been run
-is a guess.
+is a guess. This one was run on 2026-09-14, which is how the missing account
+database above was found.
+
+### If your data is in bind mounts
+
+The commands below assume the named volumes the bundled Compose file creates. If
+you mapped host directories instead, the restore is the same four steps without
+the `docker run` wrappers — and note the `.` in the `cp -a` source, which copies
+the contents rather than the directory itself:
+
+```bash
+docker compose down
+
+mv /srv/pz/zomboid /srv/pz/zomboid.before-restore   # rename, do not delete
+mkdir /srv/pz/zomboid
+cp -a /srv/pz/backups/pz-20260905-060000/. /srv/pz/zomboid/
+
+docker compose up -d
+```
+
+Ownership only needs fixing when the copy was made by a user other than uid 1000.
+Renaming the old world instead of deleting it means a failed restore costs
+nothing, and it lets you compare afterwards.
+
+### From a named volume
 
 1. Stop the stack. This saves the world first, so nothing is lost by stopping.
 
