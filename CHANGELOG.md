@@ -9,6 +9,28 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Backups left out the account database.** `db/<SERVER_NAME>.db` holds the user
+  accounts, and it was not among the backed-up directories, so a restored world
+  was one nobody could log into: the entrypoint finds no world database, treats
+  the start as a first boot, recreates the admin from `ADMIN_PASSWORD`, and every
+  other player has to register again. Characters survive either way — they live
+  in `Saves/players.db` — but they are keyed by account name, so whoever claims a
+  name first inherits that name's character. `db/` is now backed up when it
+  exists.
+
+  Found by running the restore rather than reading about it. The documentation
+  said the procedure had never been tried; it has now, on a real deployment, and
+  this is what it turned up.
+
+### Changed
+
+- `docs/backup-restore.md` documents the restore for bind mounts as well. It
+  described only the named-volume case, so anyone who mapped host directories —
+  which is what the borgmatic section recommends — had to translate the commands
+  while restoring, which is the worst moment to be improvising.
+
 ## [2.0.0] - 2026-09-13
 
 ### Upgrading
