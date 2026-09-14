@@ -9,6 +9,8 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-09-14
+
 ### Fixed
 
 - **Backups left out the account database.** `db/<SERVER_NAME>.db` holds the user
@@ -320,7 +322,8 @@ nightly.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.1...v2.0.0
 [1.2.1]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.1.1...v1.2.0
