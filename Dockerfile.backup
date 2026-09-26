@@ -4,7 +4,7 @@
 # Built from source for the same reason as in Dockerfile: the upstream release
 # binary is from 2023 and carries the Go standard library of that time, including
 # 41 HIGH/CRITICAL advisories that a newer base image cannot fix.
-FROM golang:1.27-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS rcon
+FROM golang:1.27-trixie@sha256:433790e515d27dc6003e847e644cc0af956985cf315c1c58a3b73ee2dd305183 AS rcon
 
 ARG RCON_VERSION=v0.10.3
 ENV CGO_ENABLED=0
@@ -13,7 +13,7 @@ RUN go install "github.com/gorcon/rcon-cli/cmd/gorcon@${RCON_VERSION}" \
   && install -m 0755 /go/bin/gorcon /usr/local/bin/rcon
 
 # ---- runtime -----------------------------------------------------------------
-FROM debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+FROM debian:13-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a
 
 LABEL org.opencontainers.image.title="Project Zomboid backup sidecar" \
   org.opencontainers.image.description="Scheduled world backups for a Project Zomboid dedicated server" \
