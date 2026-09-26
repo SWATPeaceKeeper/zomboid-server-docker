@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
 # Test runner image: bats plus the tools the libraries and their assertions use.
 #
 # The stock bats image is Alpine, so busybox provides find, cp and tar. The
@@ -6,7 +6,7 @@
 # --use-compress-program`, which are GNU behaviour, and the JVM library uses jq.
 # Installing the GNU versions here keeps the test environment behaving like the
 # Debian-based runtime images.
-FROM bats/bats:1.14.0
+FROM bats/bats:1.14.0@sha256:5322b877351fda0cc435de8c6116de7d0a2ec79d7c680132a0ef329a633bc66f
 
 # The bats tag pins the toolchain; pinning apk versions on top of it would break
 # the image whenever Alpine rebuilds its index.
