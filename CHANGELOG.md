@@ -9,6 +9,16 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The server image now patches its base packages at build time.** The backup
+  image already did; the server image did not, so a rebuild carried the same
+  `libssl3t64` and `openssl` as the pinned Ubuntu snapshot. The nightly scan of
+  the published images has been red since 2026-09-30 on fixable OpenSSL findings
+  (CVE-2026-75804, CVE-2026-84782) and, in the backup image, pcre2
+  (CVE-2026-103111). The published `:latest` predates those fixes; a new release
+  is what clears them.
+
 ## [2.0.1] - 2026-09-14
 
 ### Fixed
