@@ -43,8 +43,17 @@ LABEL org.opencontainers.image.title="Project Zomboid Dedicated Server" \
   org.opencontainers.image.licenses="GPL-3.0-or-later" \
   org.opencontainers.image.source="https://github.com/SWATPeaceKeeper/zomboid-server-docker"
 
+# `apt-get upgrade` before installing anything, for the reason spelled out in
+# Dockerfile.backup: the pinned base digest is a snapshot, Ubuntu ships security
+# fixes for packages inside it long before the tag is rebuilt, and `install`
+# never touches a package the base already carries. Without it a rebuild ships
+# the same libssl3t64 and openssl the snapshot had, which is how the nightly scan
+# went red on 2026-10-05 with a fixable HIGH (CVE-2026-84782) and no newer digest
+# to bump to.
+#
 # hadolint ignore=DL3008
 RUN apt-get update \
+  && apt-get upgrade -y \
   && apt-get install -y --no-install-recommends \
   ca-certificates \
   iproute2 \
