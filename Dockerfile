@@ -9,7 +9,7 @@
 #
 # The version pin is verified by Go's module checksum database, which is a
 # stronger guarantee than the tarball hash it replaces.
-FROM golang:1.27-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS rcon
+FROM golang:1.27-trixie@sha256:47667934874913a449b96faa7ef4777fa285d9ec29126ee80ed61c45b7cccf0e AS rcon
 
 ARG RCON_VERSION=v0.10.3
 ENV CGO_ENABLED=0

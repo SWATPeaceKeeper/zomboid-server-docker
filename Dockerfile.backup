@@ -4,7 +4,7 @@
 # Built from source for the same reason as in Dockerfile: the upstream release
 # binary is from 2023 and carries the Go standard library of that time, including
 # 41 HIGH/CRITICAL advisories that a newer base image cannot fix.
-FROM golang:1.27-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 AS rcon
+FROM golang:1.27-trixie@sha256:47667934874913a449b96faa7ef4777fa285d9ec29126ee80ed61c45b7cccf0e AS rcon
 
 ARG RCON_VERSION=v0.10.3
 ENV CGO_ENABLED=0

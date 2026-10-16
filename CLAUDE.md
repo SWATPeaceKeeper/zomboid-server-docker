@@ -87,7 +87,7 @@ Go tests, through the same pinned toolchain CI and the release build use:
 
 ```bash
 docker run --rm -v "${PWD}/exporter:/src" -w /src \
-  golang:1.27-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 \
+  golang:1.27-trixie@sha256:47667934874913a449b96faa7ef4777fa285d9ec29126ee80ed61c45b7cccf0e \
   go test ./...
 ```
 
@@ -109,7 +109,7 @@ yamllint -c .yamllint .
 zizmor --persona=regular .github/workflows/
 ./tests/check-lint-versions.sh   # enforces non-negotiable 8, below
 docker run --rm -v "${PWD}/exporter:/src" -w /src \
-  golang:1.27-trixie@sha256:9baa6b4187bbb98d240372a8a235ac0bb6b5ddd52bba1431dc2f7c0705862728 \
+  golang:1.27-trixie@sha256:47667934874913a449b96faa7ef4777fa285d9ec29126ee80ed61c45b7cccf0e \
   sh -c 'go install golang.org/x/vuln/cmd/govulncheck@v1.7.0 && govulncheck ./...'
 ```
 

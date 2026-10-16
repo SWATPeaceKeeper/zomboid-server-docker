@@ -9,6 +9,16 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+### Fixed
+
+- **All three images are built with Go 1.27.2.** The `rcon` binary in the server
+  and backup images and the exporter itself were compiled with Go 1.27.1, and the
+  nightly scan of the published images has been red since 2026-10-09 on three
+  HIGH findings in its standard library (CVE-2026-78667, CVE-2026-78669,
+  CVE-2026-97031). The backup image's rebuild also picks up the patched curl
+  (CVE-2026-8286, CVE-2026-8927, CVE-2026-92392) through its build-time
+  `apt-get upgrade`. A new release is what clears the published `:latest`.
+
 ## [2.0.2] - 2026-10-05
 
 ### Fixed
