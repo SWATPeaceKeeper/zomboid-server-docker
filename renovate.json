@@ -22,6 +22,12 @@
       "groupName": "container images"
     },
     {
+      "description": "The golang pins outside the Dockerfiles join the same group, so the builder, CI and the documented commands always move to one digest in one PR",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["docker"],
+      "groupName": "container images"
+    },
+    {
       "matchManagers": ["pre-commit"],
       "groupName": "pre-commit hooks"
     }
@@ -37,6 +43,18 @@
       "matchStrings": ["GOVULNCHECK_VERSION: (?<currentValue>v[\\d.]+)"],
       "depNameTemplate": "golang.org/x/vuln",
       "datasourceTemplate": "go"
+    },
+    {
+      "customType": "regex",
+      "description": "The golang image in the workflows and the documented commands. No manager reads a plain string there, so only the Dockerfiles ever got a new Go, while govulncheck in CI kept scanning against the old standard library and, once Go 1.27.2 fixed five advisories, failed every PR",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/(lint|test)\\.yml$/",
+        "/^(CLAUDE|CONTRIBUTING)\\.md$/"
+      ],
+      "matchStrings": [
+        "(?<depName>golang):(?<currentValue>[\\w.-]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ]
 }
