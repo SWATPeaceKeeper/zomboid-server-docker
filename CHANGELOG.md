@@ -9,6 +9,8 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-10-16
+
 ### Fixed
 
 - **All three images are built with Go 1.27.2.** The `rcon` binary in the server
@@ -350,7 +352,8 @@ nightly.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.2...HEAD
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.3...HEAD
+[2.0.3]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.2...v2.0.3
 [2.0.2]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v1.2.1...v2.0.0
