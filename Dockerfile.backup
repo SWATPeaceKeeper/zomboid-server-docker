@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 
 # ---- rcon-cli ----------------------------------------------------------------
 # Built from source for the same reason as in Dockerfile: the upstream release
@@ -13,7 +13,7 @@ RUN go install "github.com/gorcon/rcon-cli/cmd/gorcon@${RCON_VERSION}" \
   && install -m 0755 /go/bin/gorcon /usr/local/bin/rcon
 
 # ---- runtime -----------------------------------------------------------------
-FROM debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+FROM debian:13-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f
 
 LABEL org.opencontainers.image.title="Project Zomboid backup sidecar" \
   org.opencontainers.image.description="Scheduled world backups for a Project Zomboid dedicated server" \
