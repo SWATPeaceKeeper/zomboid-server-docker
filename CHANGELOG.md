@@ -18,6 +18,12 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   CVE-2026-97031). The backup image's rebuild also picks up the patched curl
   (CVE-2026-8286, CVE-2026-8927, CVE-2026-92392) through its build-time
   `apt-get upgrade`. A new release is what clears the published `:latest`.
+- **govulncheck in CI now uses the same Go as the build.** The golang image in
+  `lint.yml`, `test.yml` and the commands in `CLAUDE.md` and `CONTRIBUTING.md`
+  was a plain string Renovate never looked at, so it could only fall behind the
+  Dockerfiles. It stayed on 1.27.1 and failed every pull request on five
+  standard-library advisories. A regex manager now tracks it, in the same group
+  as the Dockerfiles.
 
 ## [2.0.2] - 2026-10-05
 
