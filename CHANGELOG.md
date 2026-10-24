@@ -9,6 +9,14 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The documented govulncheck command now moves with CI.** Renovate tracked the
+  govulncheck version only in `lint.yml`, so its update to v1.9.0 would have left
+  the commands in `CLAUDE.md` and `CONTRIBUTING.md` on v1.7.0, and a local run
+  would have checked with a different version than CI. The same regex manager
+  now covers both files.
+
 ## [2.0.4] - 2026-10-24
 
 ### Fixed

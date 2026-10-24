@@ -38,9 +38,15 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "govulncheck, pinned as a plain string in the lint workflow where no manager looks",
-      "managerFilePatterns": ["/^\\.github/workflows/lint\\.yml$/"],
-      "matchStrings": ["GOVULNCHECK_VERSION: (?<currentValue>v[\\d.]+)"],
+      "description": "govulncheck, pinned as a plain string in the lint workflow and in the documented commands, where no manager looks. Tracking only the workflow left the documented commands on v1.7.0 while CI moved to v1.9.0",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/lint\\.yml$/",
+        "/^(CLAUDE|CONTRIBUTING)\\.md$/"
+      ],
+      "matchStrings": [
+        "GOVULNCHECK_VERSION: (?<currentValue>v[\\d.]+)",
+        "golang\\.org/x/vuln/cmd/govulncheck@(?<currentValue>v[\\d.]+)"
+      ],
       "depNameTemplate": "golang.org/x/vuln",
       "datasourceTemplate": "go"
     },
