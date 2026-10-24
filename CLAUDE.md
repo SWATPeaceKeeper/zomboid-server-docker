@@ -110,7 +110,7 @@ zizmor --persona=regular .github/workflows/
 ./tests/check-lint-versions.sh   # enforces non-negotiable 8, below
 docker run --rm -v "${PWD}/exporter:/src" -w /src \
   golang:1.27-trixie@sha256:fbb7ae40b62ff8afe31662df570d39b4f5052ac32b90dae8e60d7657a20a74f4 \
-  sh -c 'go install golang.org/x/vuln/cmd/govulncheck@v1.7.0 && govulncheck ./...'
+  sh -c 'go install golang.org/x/vuln/cmd/govulncheck@v1.9.0 && govulncheck ./...'
 ```
 
 Zero warnings. If one genuinely cannot be fixed, add an inline ignore with a
