@@ -128,7 +128,9 @@ jobs:
   # artefact people actually pull. This one pulls the pushed image by its commit
   # digest tag and runs the same end-to-end check against it.
   verify-published:
-    runs-on: ubuntu-latest
+    # ubuntu-24.04 rather than ubuntu-latest, because Docker 29.4.2 on the 26.04
+    # image breaks SteamCMD. See the smoke job in test.yml.
+    runs-on: ubuntu-24.04
     needs: publish
     timeout-minutes: 60
     permissions:

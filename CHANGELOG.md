@@ -19,6 +19,12 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   build-time `apt-get upgrade`; the nightly scan of the published images has
   been red since 2026-11-05 on the apt finding, and later on zlib as well. A new
   release is what clears the published `:latest`.
+- **The smoke tests run on `ubuntu-24.04` again.** `ubuntu-latest` moved to the
+  Ubuntu 26.04 runner image, which ships Docker 29.4.2. Its default seccomp
+  profile blocks the 32-bit `socketcall(2)`, so SteamCMD could not open a socket
+  and every smoke run since 2026-11-05 ended in "Steamcmd needs to be online to
+  update". The image itself is unaffected; a host on Docker 29.4.2 hits the same
+  wall, and the README troubleshooting table now says so.
 
 - **The documented govulncheck command now moves with CI.** Renovate tracked the
   govulncheck version only in `lint.yml`, so its update to v1.9.0 would have left
