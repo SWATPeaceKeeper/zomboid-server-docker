@@ -57,7 +57,13 @@ jobs:
   # in the release workflow against the published artefact, so neither is
   # redundant and the 7 GB download happens once per workflow.
   smoke:
-    runs-on: ubuntu-latest
+    # Not ubuntu-latest: that is the 26.04 image, which ships Docker 29.4.2. Its
+    # default seccomp profile answers the 32-bit `socketcall(2)` with ENOSYS, so
+    # SteamCMD (a 32-bit program) cannot open a socket and dies with "Steamcmd
+    # needs to be online to update". Fixed in Docker 29.4.3; go back to
+    # ubuntu-latest once the 26.04 image ships a newer Docker
+    # (actions/runner-images#15205). Same pin in release.yml.
+    runs-on: ubuntu-24.04
     needs: unit
     # The server download is roughly 7 GB on Build 42 and the first boot
     # generates a world before it answers anything.

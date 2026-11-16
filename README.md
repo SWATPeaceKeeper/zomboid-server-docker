@@ -596,6 +596,7 @@ its ceiling.
 | Hangs at `Router detection/configuration starting` | UPnP probing, useless in a container | Set `UPnP=false` in `<SERVER_NAME>.ini`, restart |
 | World reverted after a crash | Container was killed instead of stopped | Check `stop_grace_period` is 180s; restore a backup |
 | `Steamcmd needs to be online to update` | The container has no route out | Check the network is not `internal: true`, and that the host has DNS |
+| The same, plus `CreateBoundSocket: failed to create socket ... (38)`, while `curl` in the container works | Docker Engine 29.4.2 blocks the 32-bit socket call SteamCMD uses | `docker version --format '{{.Server.Version}}'`; upgrade Docker to 29.4.3 or later. Do not use `seccomp=unconfined` |
 | Never turns healthy, but the log says it started | `RCON_PASSWORD` differs from `RCONPassword` in the INI | Make them match and restart |
 
 More, with commands: [`docs/runbook.md`](docs/runbook.md).
