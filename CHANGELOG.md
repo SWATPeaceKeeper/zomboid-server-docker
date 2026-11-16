@@ -11,6 +11,15 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ### Fixed
 
+- **All three images are built with Go 1.27.4.** The `rcon` binary in the server
+  and backup images and the exporter were compiled with Go 1.27.3, and
+  govulncheck has failed every lint run since 2026-11-11 on GO-2026-6859 in
+  `net/http`. The rebuild also picks up the patched apt (CVE-2026-109518, both
+  images) and zlib (CVE-2026-76844, CVE-2026-85091, backup image) through the
+  build-time `apt-get upgrade`; the nightly scan of the published images has
+  been red since 2026-11-05 on the apt finding, and later on zlib as well. A new
+  release is what clears the published `:latest`.
+
 - **The documented govulncheck command now moves with CI.** Renovate tracked the
   govulncheck version only in `lint.yml`, so its update to v1.9.0 would have left
   the commands in `CLAUDE.md` and `CONTRIBUTING.md` on v1.7.0, and a local run
