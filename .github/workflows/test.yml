@@ -63,7 +63,7 @@ jobs:
     # needs to be online to update". Fixed in Docker 29.4.3; go back to
     # ubuntu-latest once the 26.04 image ships a newer Docker
     # (actions/runner-images#15205). Same pin in release.yml.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: unit
     # The server download is roughly 7 GB on Build 42 and the first boot
     # generates a world before it answers anything.
