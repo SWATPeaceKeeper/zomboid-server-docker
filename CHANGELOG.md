@@ -9,6 +9,8 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
 
 ## [Unreleased]
 
+## [2.0.5] - 2026-11-19
+
 ### Fixed
 
 - **All three images are built with Go 1.27.4.** The `rcon` binary in the server
@@ -25,7 +27,6 @@ Versions describe **this wrapper**, not the Project Zomboid version it runs.
   and every smoke run since 2026-11-05 ended in "Steamcmd needs to be online to
   update". The image itself is unaffected; a host on Docker 29.4.2 hits the same
   wall, and the README troubleshooting table now says so.
-
 - **The documented govulncheck command now moves with CI.** Renovate tracked the
   govulncheck version only in `lint.yml`, so its update to v1.9.0 would have left
   the commands in `CLAUDE.md` and `CONTRIBUTING.md` on v1.7.0, and a local run
@@ -387,7 +388,8 @@ nightly.
   HIGH/CRITICAL advisories that no base image update can remove. Both images now
   scan clean.
 
-[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.4...HEAD
+[Unreleased]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.5...HEAD
+[2.0.5]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.4...v2.0.5
 [2.0.4]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.3...v2.0.4
 [2.0.3]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.2...v2.0.3
 [2.0.2]: https://github.com/SWATPeaceKeeper/zomboid-server-docker/compare/v2.0.1...v2.0.2
