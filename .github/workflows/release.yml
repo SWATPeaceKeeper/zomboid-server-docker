@@ -130,7 +130,7 @@ jobs:
   verify-published:
     # ubuntu-24.04 rather than ubuntu-latest, because Docker 29.4.2 on the 26.04
     # image breaks SteamCMD. See the smoke job in test.yml.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: publish
     timeout-minutes: 60
     permissions:
